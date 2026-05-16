@@ -1,0 +1,479 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A001000000000001 /* YearWorkoutPlanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000001 /* YearWorkoutPlanApp.swift */; };
+		A001000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000002 /* ContentView.swift */; };
+		A001000000000003 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000003 /* Theme.swift */; };
+		A001000000000004 /* Season.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000004 /* Season.swift */; };
+		A001000000000005 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000005 /* Exercise.swift */; };
+		A001000000000006 /* Schedules.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000006 /* Schedules.swift */; };
+		A001000000000007 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000007 /* AppState.swift */; };
+		A001000000000008 /* WorkoutLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000008 /* WorkoutLog.swift */; };
+		A001000000000009 /* Supplement.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000009 /* Supplement.swift */; };
+		A001000000000010 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000010 /* TodayView.swift */; };
+		A001000000000011 /* ScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000011 /* ScheduleView.swift */; };
+		A001000000000012 /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000012 /* LogView.swift */; };
+		A001000000000013 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000013 /* StatsView.swift */; };
+		A001000000000014 /* PlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000014 /* PlanView.swift */; };
+		A001000000000015 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000015 /* CardView.swift */; };
+		A001000000000020 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B001000000000020 /* Assets.xcassets */; };
+		A001000000000030 /* ExerciseAlternatives.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000030 /* ExerciseAlternatives.swift */; };
+		A001000000000031 /* Recipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000031 /* Recipe.swift */; };
+		A001000000000032 /* MobilityCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000032 /* MobilityCatalog.swift */; };
+		A001000000000033 /* SwapExerciseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000033 /* SwapExerciseSheet.swift */; };
+		A001000000000034 /* RecipeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000034 /* RecipeListView.swift */; };
+		A001000000000035 /* MobilitySectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000035 /* MobilitySectionView.swift */; };
+		AA000000000000001A /* PerformanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000001A /* PerformanceModels.swift */; };
+		AA000000000000002A /* Autoregulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000002A /* Autoregulation.swift */; };
+		AA000000000000003A /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000003A /* HealthKitManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B001000000000001 /* YearWorkoutPlanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearWorkoutPlanApp.swift; sourceTree = "<group>"; };
+		B001000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B001000000000003 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		B001000000000004 /* Season.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Season.swift; sourceTree = "<group>"; };
+		B001000000000005 /* Exercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exercise.swift; sourceTree = "<group>"; };
+		B001000000000006 /* Schedules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedules.swift; sourceTree = "<group>"; };
+		B001000000000007 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		B001000000000008 /* WorkoutLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLog.swift; sourceTree = "<group>"; };
+		B001000000000009 /* Supplement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Supplement.swift; sourceTree = "<group>"; };
+		B001000000000010 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		B001000000000011 /* ScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleView.swift; sourceTree = "<group>"; };
+		B001000000000012 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
+		B001000000000013 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		B001000000000014 /* PlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanView.swift; sourceTree = "<group>"; };
+		B001000000000015 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
+		B001000000000020 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B001000000000030 /* ExerciseAlternatives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseAlternatives.swift; sourceTree = "<group>"; };
+		B001000000000031 /* Recipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe.swift; sourceTree = "<group>"; };
+		B001000000000032 /* MobilityCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilityCatalog.swift; sourceTree = "<group>"; };
+		B001000000000033 /* SwapExerciseSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwapExerciseSheet.swift; sourceTree = "<group>"; };
+		B001000000000034 /* RecipeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeListView.swift; sourceTree = "<group>"; };
+		B001000000000035 /* MobilitySectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilitySectionView.swift; sourceTree = "<group>"; };
+		BB000000000000001A /* PerformanceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceModels.swift; sourceTree = "<group>"; };
+		BB000000000000002A /* Autoregulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Autoregulation.swift; sourceTree = "<group>"; };
+		BB000000000000003A /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
+		BB000000000000004A /* YearWorkoutPlan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YearWorkoutPlan.entitlements; sourceTree = "<group>"; };
+		C001000000000001 /* YearWorkoutPlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YearWorkoutPlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D001000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E001000000000001 /* YearWorkoutPlan */ = {
+			isa = PBXGroup;
+			children = (
+				B001000000000001 /* YearWorkoutPlanApp.swift */,
+				B001000000000002 /* ContentView.swift */,
+				BB000000000000004A /* YearWorkoutPlan.entitlements */,
+				E001000000000002 /* Models */,
+				E001000000000003 /* Views */,
+				E001000000000004 /* Theme */,
+				E001000000000006 /* Services */,
+				B001000000000020 /* Assets.xcassets */,
+			);
+			path = YearWorkoutPlan;
+			sourceTree = "<group>";
+		};
+		E001000000000002 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B001000000000004 /* Season.swift */,
+				B001000000000005 /* Exercise.swift */,
+				B001000000000006 /* Schedules.swift */,
+				B001000000000007 /* AppState.swift */,
+				B001000000000008 /* WorkoutLog.swift */,
+				B001000000000009 /* Supplement.swift */,
+				B001000000000030 /* ExerciseAlternatives.swift */,
+				B001000000000031 /* Recipe.swift */,
+				B001000000000032 /* MobilityCatalog.swift */,
+				BB000000000000001A /* PerformanceModels.swift */,
+				BB000000000000002A /* Autoregulation.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E001000000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				BB000000000000003A /* HealthKitManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E001000000000003 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B001000000000010 /* TodayView.swift */,
+				B001000000000011 /* ScheduleView.swift */,
+				B001000000000012 /* LogView.swift */,
+				B001000000000013 /* StatsView.swift */,
+				B001000000000014 /* PlanView.swift */,
+				B001000000000033 /* SwapExerciseSheet.swift */,
+				B001000000000034 /* RecipeListView.swift */,
+				B001000000000035 /* MobilitySectionView.swift */,
+				E001000000000005 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E001000000000004 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				B001000000000003 /* Theme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		E001000000000005 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				B001000000000015 /* CardView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E001000000000010 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C001000000000001 /* YearWorkoutPlan.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E001000000000011 = {
+			isa = PBXGroup;
+			children = (
+				E001000000000001 /* YearWorkoutPlan */,
+				E001000000000010 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F001000000000001 /* YearWorkoutPlan */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F001000000000010 /* Build configuration list for PBXNativeTarget "YearWorkoutPlan" */;
+			buildPhases = (
+				F001000000000002 /* Sources */,
+				D001000000000001 /* Frameworks */,
+				F001000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = YearWorkoutPlan;
+			productName = YearWorkoutPlan;
+			productReference = C001000000000001 /* YearWorkoutPlan.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F001000000000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					F001000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = F001000000000020 /* Build configuration list for PBXProject "YearWorkoutPlan" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E001000000000011;
+			productRefGroup = E001000000000010 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F001000000000001 /* YearWorkoutPlan */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F001000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A001000000000020 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F001000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A001000000000001 /* YearWorkoutPlanApp.swift in Sources */,
+				A001000000000002 /* ContentView.swift in Sources */,
+				A001000000000003 /* Theme.swift in Sources */,
+				A001000000000004 /* Season.swift in Sources */,
+				A001000000000005 /* Exercise.swift in Sources */,
+				A001000000000006 /* Schedules.swift in Sources */,
+				A001000000000007 /* AppState.swift in Sources */,
+				A001000000000008 /* WorkoutLog.swift in Sources */,
+				A001000000000009 /* Supplement.swift in Sources */,
+				A001000000000010 /* TodayView.swift in Sources */,
+				A001000000000011 /* ScheduleView.swift in Sources */,
+				A001000000000012 /* LogView.swift in Sources */,
+				A001000000000013 /* StatsView.swift in Sources */,
+				A001000000000014 /* PlanView.swift in Sources */,
+				A001000000000015 /* CardView.swift in Sources */,
+				A001000000000030 /* ExerciseAlternatives.swift in Sources */,
+				A001000000000031 /* Recipe.swift in Sources */,
+				A001000000000032 /* MobilityCatalog.swift in Sources */,
+				A001000000000033 /* SwapExerciseSheet.swift in Sources */,
+				A001000000000034 /* RecipeListView.swift in Sources */,
+				A001000000000035 /* MobilitySectionView.swift in Sources */,
+				AA000000000000001A /* PerformanceModels.swift in Sources */,
+				AA000000000000002A /* Autoregulation.swift in Sources */,
+				AA000000000000003A /* HealthKitManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F001000000000030 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F001000000000031 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F001000000000032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = YearWorkoutPlan/YearWorkoutPlan.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 974TZ639TZ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "YearWorkoutPlan uses the camera for biweekly progress photos.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "YearWorkoutPlan reads your HRV, resting heart rate, sleep, VO2max, and body mass to compute your daily Recovery Score and update the Hexagon radar.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "YearWorkoutPlan writes workout sessions and heart-rate samples from completed sessions to the Health app.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "YearWorkoutPlan saves progress photos to your Photo Library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "YearWorkoutPlan needs photo access to attach progress photos.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.williamwriter.YearWorkoutPlan;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F001000000000033 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = YearWorkoutPlan/YearWorkoutPlan.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 974TZ639TZ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "YearWorkoutPlan uses the camera for biweekly progress photos.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "YearWorkoutPlan reads your HRV, resting heart rate, sleep, VO2max, and body mass to compute your daily Recovery Score and update the Hexagon radar.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "YearWorkoutPlan writes workout sessions and heart-rate samples from completed sessions to the Health app.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "YearWorkoutPlan saves progress photos to your Photo Library.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "YearWorkoutPlan needs photo access to attach progress photos.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.williamwriter.YearWorkoutPlan;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F001000000000010 /* Build configuration list for PBXNativeTarget "YearWorkoutPlan" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F001000000000032 /* Debug */,
+				F001000000000033 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F001000000000020 /* Build configuration list for PBXProject "YearWorkoutPlan" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F001000000000030 /* Debug */,
+				F001000000000031 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F001000000000000 /* Project object */;
+}
