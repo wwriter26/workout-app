@@ -78,10 +78,17 @@ final class HealthKitManager {
     func fetchLatestSnapshot() async throws -> HealthSnapshot {
         guard isAvailable else { throw HealthKitError.notAvailable }
 
+        // Composed units — safer than string parsing. HKUnit(from: "ml/kg/min")
+        // throws NSInvalidArgumentException at runtime because chained `/` isn't
+        // accepted by HealthKit's parser ("ml/(kg*min)" works, composition is bulletproof).
+        let bpmUnit    = HKUnit.count().unitDivided(by: .minute())
+        let vo2maxUnit = HKUnit.literUnit(with: .milli)
+            .unitDivided(by: HKUnit.gramUnit(with: .kilo).unitMultiplied(by: .minute()))
+
         // Run all queries concurrently — independent reads, no ordering requirement
         async let hrv        = latestQuantity(.heartRateVariabilitySDNN, unit: .secondUnit(with: .milli))
-        async let rhr        = latestQuantity(.restingHeartRate, unit: HKUnit(from: "count/min"))
-        async let vo2        = latestQuantity(.vo2Max, unit: HKUnit(from: "ml/kg/min"))
+        async let rhr        = latestQuantity(.restingHeartRate, unit: bpmUnit)
+        async let vo2        = latestQuantity(.vo2Max, unit: vo2maxUnit)
         async let mass       = latestQuantity(.bodyMass, unit: .gramUnit(with: .kilo))
         async let sleepData  = fetchSleepSummary()
 
@@ -140,7 +147,7 @@ final class HealthKitManager {
         // Add optional average heart rate sample
         if let bpm = avgHeartRate, bpm > 0 {
             let hrType   = HKQuantityType(.heartRate)
-            let hrUnit   = HKUnit(from: "count/min")
+            let hrUnit   = HKUnit.count().unitDivided(by: .minute())
             let hrQty    = HKQuantity(unit: hrUnit, doubleValue: bpm)
             let hrSample = HKQuantitySample(
                 type: hrType,
