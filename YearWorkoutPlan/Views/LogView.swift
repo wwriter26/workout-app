@@ -132,7 +132,7 @@ struct LogView: View {
                     emptyHistoryCard
                 } else {
                     ForEach(filteredLogs) { entry in
-                        HistoryEntryCard(entry: entry, season: Seasons.season(for: entry.week))
+                        HistoryEntryCard(entry: entry, season: Seasons.season(for: entry.week), weightUnit: state.weightUnit)
                     }
                 }
 
@@ -201,7 +201,7 @@ struct LogView: View {
             HStack(spacing: 16) {
                 SummaryTile(value: "\(sessionCount)/\(planned)", label: "Sessions")
                 SummaryTile(value: weeklyVolume > 0 ? String(format: "%.0f", weeklyVolume) : "—",
-                            label: "Vol (lbs)")
+                            label: "Vol (\(state.weightUnit.label))")
             }
             .padding(.top, 8)
         }
@@ -272,16 +272,18 @@ struct LogView: View {
                             completedSets: $bindState.completedSets,
                             logWeights: $bindState.logWeights,
                             userPlateProfile: state.userProfile.plateProfile,
+                            weightUnit: state.weightUnit,
                             onComplete: {}
                         )
                     }
 
                     // Autoreg hint below last set
                     AutoregHint(
-                        suggestedWeight: state.suggestedNextWeight(
+                        suggestedWeightLbs: state.suggestedNextWeight(
                             forExercise: ex.name,
                             targetRIRString: ex.rir
                         ),
+                        weightUnit: state.weightUnit,
                         seasonColor: state.season.color
                     )
                 }
@@ -311,7 +313,7 @@ struct LogView: View {
                 ForEach(SupplementList.bigLifts, id: \.self) { lift in
                     if let w = state.prLog[lift] {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("\(w, specifier: "%.1f") lbs")
+                            Text(WeightFormat.display(w, unit: state.weightUnit))
                                 .font(.monoBig)
                                 .foregroundColor(state.season.color)
                             Text(lift)
@@ -569,19 +571,22 @@ private struct SummaryTile: View {
 private struct HistoryEntryCard: View {
     let entry: WorkoutLog
     let season: Season
+    let weightUnit: WeightUnit
     @State private var isExpanded = false
 
     private var exercisesWithWeight: [ExerciseLog] {
         entry.exercises.filter { ex in ex.sets.contains { !$0.weight.isEmpty } }
     }
 
+    /// Stored weights are canonical lbs; convert volume to display unit.
     private func volumeString(for ex: ExerciseLog) -> String {
-        let total = ex.sets.reduce(0.0) { sum, s in
+        let totalLbs = ex.sets.reduce(0.0) { sum, s in
             let w = Double(s.weight) ?? 0
             let r = Double(s.reps) ?? 1
             return sum + w * r
         }
-        return total > 0 ? String(format: "%.0f lbs vol", total) : ""
+        guard totalLbs > 0 else { return "" }
+        return "\(WeightFormat.display(totalLbs, unit: weightUnit, decimals: 0)) vol"
     }
 
     var body: some View {
@@ -617,7 +622,7 @@ private struct HistoryEntryCard: View {
                         s2 + (Double(set.weight) ?? 0) * (Double(set.reps) ?? 1)
                     }
                 }
-                Text("Total volume: \(Int(totalVol)) lbs")
+                Text("Total volume: \(WeightFormat.display(totalVol, unit: weightUnit, decimals: 0))")
                     .font(.monoTiny)
                     .foregroundColor(AppColor.textDimmed)
                     .padding(.top, 4)
@@ -645,7 +650,14 @@ private struct HistoryEntryCard: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 4) {
                                 ForEach(ex.sets.filter { !$0.weight.isEmpty }) { s in
-                                    Text("\(s.weight)×\(s.reps)")
+                                    // Display the canonical-lbs weight in user's preferred unit.
+                                    let displayW: String = {
+                                        if let lbs = Double(s.weight) {
+                                            return WeightFormat.display(lbs, unit: weightUnit, decimals: 1, includeUnit: false)
+                                        }
+                                        return s.weight
+                                    }()
+                                    Text("\(displayW)×\(s.reps)")
                                         .font(.monoSmall)
                                         .foregroundColor(AppColor.textSecondary)
                                         .padding(.horizontal, 8)

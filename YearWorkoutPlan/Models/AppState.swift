@@ -228,10 +228,11 @@ final class AppState {
     // MARK: - Actions
 
     func logBodyweight() {
-        guard let w = Double(todayBW), w > 0 else { return }
+        // todayBW is in the user's current display unit; convert to canonical lbs.
+        guard let canonicalLbs = WeightFormat.parseToCanonical(todayBW, unit: weightUnit) else { return }
         let dateStr = dateString(from: Date())
         bodyweightLog.removeAll { $0.date == dateStr }
-        bodyweightLog.append(BodyweightEntry(date: dateStr, weight: w))
+        bodyweightLog.append(BodyweightEntry(date: dateStr, weight: canonicalLbs))
         // Keep last 60 entries
         if bodyweightLog.count > 60 { bodyweightLog = Array(bodyweightLog.suffix(60)) }
         todayBW = ""
@@ -244,6 +245,7 @@ final class AppState {
 
     func saveSession() {
         let dateStr = dateString(from: Date())
+        let unit = weightUnit
         let exercises = adjustedSession.exercises.enumerated().map { (i, ex) in
             // Use swapped name if applicable
             let key = swapKey(week: currentWeek, day: todayDayKey, originalName: ex.name)
@@ -251,8 +253,19 @@ final class AppState {
             return ExerciseLog(
                 name: loggedName,
                 sets: (0..<ex.sets).map { si in
-                    SetLog(
-                        weight: logWeights["\(i)-\(si)-w"] ?? "",
+                    // The user typed the weight in their current unit. Convert to
+                    // canonical lbs so all downstream calcs (PR, e1RM, volume) match
+                    // regardless of which unit the user is in when they view it.
+                    let typed = logWeights["\(i)-\(si)-w"] ?? ""
+                    let canonicalStr: String
+                    if let lbs = WeightFormat.parseToCanonical(typed, unit: unit) {
+                        // Round to 1 decimal to avoid noisy "187.39458"; PR / vol math is unaffected
+                        canonicalStr = String(format: "%.1f", lbs)
+                    } else {
+                        canonicalStr = typed  // empty or unparseable: store as-is
+                    }
+                    return SetLog(
+                        weight: canonicalStr,
                         reps:   logWeights["\(i)-\(si)-r"] ?? ex.reps,
                         rir:    logWeights["\(i)-\(si)-rir"] ?? ex.rir
                     )
@@ -395,6 +408,13 @@ final class AppState {
     /// currentWeek and currentDayIndex from elapsed days since programStartDate.
     /// When false, the user controls week manually via the +/- buttons.
     var autoSyncWeekToCalendar: Bool = true {
+        didSet { save() }
+    }
+
+    /// User's preferred unit for displaying + entering weight throughout the app.
+    /// Storage is always canonical lbs; this only affects the view layer and the
+    /// conversion applied on input in saveSession() + logBodyweight().
+    var weightUnit: WeightUnit = .lbs {
         didSet { save() }
     }
 
@@ -709,7 +729,8 @@ final class AppState {
             supplementRemindersEnabled:  supplementRemindersEnabled,
             weeklySummaryEnabled:        weeklySummaryEnabled,
             programStartDate:            programStartDate,
-            autoSyncWeekToCalendar:      autoSyncWeekToCalendar
+            autoSyncWeekToCalendar:      autoSyncWeekToCalendar,
+            weightUnit:                  weightUnit
         )
         if let data = try? JSONEncoder().encode(container) {
             UserDefaults.standard.set(data, forKey: Self.v3Key)
@@ -784,6 +805,8 @@ final class AppState {
         // Wave 5: calendar anchoring
         programStartDate           = c.programStartDate
         autoSyncWeekToCalendar     = c.autoSyncWeekToCalendar
+        // Wave 6: weight unit
+        weightUnit                 = c.weightUnit
     }
 
     private func applyV2Container(_ c: PersistenceContainer) {
@@ -980,6 +1003,9 @@ private struct PersistenceContainerV3: Codable {
     var programStartDate: Date
     var autoSyncWeekToCalendar: Bool
 
+    // --- Wave 6: weight unit preference ---
+    var weightUnit: WeightUnit
+
     // Custom decode with decodeIfPresent for every v3+ field so that a v2/v3 blob
     // decoded here still produces valid defaults rather than a throw.
     init(from decoder: Decoder) throws {
@@ -1024,6 +1050,9 @@ private struct PersistenceContainerV3: Codable {
         // when decoding a pre-Wave-5 blob so existing users land in the right week.
         programStartDate       = (try? c.decodeIfPresent(Date.self, forKey: .programStartDate)) ?? AppState.defaultProgramStartDate()
         autoSyncWeekToCalendar = (try? c.decodeIfPresent(Bool.self, forKey: .autoSyncWeekToCalendar)) ?? true
+
+        // Wave 6: weight unit preference. Existing data is canonical lbs.
+        weightUnit = (try? c.decodeIfPresent(WeightUnit.self, forKey: .weightUnit)) ?? .lbs
     }
 
     // Memberwise init used by AppState.save()
@@ -1047,7 +1076,9 @@ private struct PersistenceContainerV3: Codable {
         weeklySummaryEnabled: Bool,
         // Wave 5: calendar anchoring
         programStartDate: Date,
-        autoSyncWeekToCalendar: Bool
+        autoSyncWeekToCalendar: Bool,
+        // Wave 6: weight unit
+        weightUnit: WeightUnit
     ) {
         self.currentWeek               = currentWeek
         self.currentDayIndex           = currentDayIndex
@@ -1080,6 +1111,7 @@ private struct PersistenceContainerV3: Codable {
         self.weeklySummaryEnabled        = weeklySummaryEnabled
         self.programStartDate            = programStartDate
         self.autoSyncWeekToCalendar      = autoSyncWeekToCalendar
+        self.weightUnit                  = weightUnit
     }
 }
 

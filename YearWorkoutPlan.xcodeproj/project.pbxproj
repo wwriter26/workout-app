@@ -31,6 +31,7 @@
 		A001000000000035 /* MobilitySectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B001000000000035 /* MobilitySectionView.swift */; };
 		AA000000000000001A /* PerformanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000001A /* PerformanceModels.swift */; };
 		AA000000000000002A /* Autoregulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000002A /* Autoregulation.swift */; };
+		AA000000000000099 /* Units.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000099 /* Units.swift */; };
 		AA000000000000003A /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000003A /* HealthKitManager.swift */; };
 		AA000000000000004A /* RestTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000004B /* RestTimer.swift */; };
 		AA000000000000005A /* RestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000005A /* RestTimerView.swift */; };
@@ -78,6 +79,7 @@
 		B001000000000035 /* MobilitySectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilitySectionView.swift; sourceTree = "<group>"; };
 		BB000000000000001A /* PerformanceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceModels.swift; sourceTree = "<group>"; };
 		BB000000000000002A /* Autoregulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Autoregulation.swift; sourceTree = "<group>"; };
+		BB000000000000099 /* Units.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Units.swift; sourceTree = "<group>"; };
 		BB000000000000003A /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		BB000000000000004A /* YearWorkoutPlan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YearWorkoutPlan.entitlements; sourceTree = "<group>"; };
 		BB000000000000004B /* RestTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimer.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 				B001000000000032 /* MobilityCatalog.swift */,
 				BB000000000000001A /* PerformanceModels.swift */,
 				BB000000000000002A /* Autoregulation.swift */,
+				BB000000000000099 /* Units.swift */,
 				CC2B000000000001B /* MuscleGroupMap.swift */,
 			);
 			path = Models;
@@ -313,6 +316,7 @@
 				A001000000000035 /* MobilitySectionView.swift in Sources */,
 				AA000000000000001A /* PerformanceModels.swift in Sources */,
 				AA000000000000002A /* Autoregulation.swift in Sources */,
+				AA000000000000099 /* Units.swift in Sources */,
 				AA000000000000003A /* HealthKitManager.swift in Sources */,
 				AA000000000000004A /* RestTimer.swift in Sources */,
 				AA000000000000005A /* RestTimerView.swift in Sources */,

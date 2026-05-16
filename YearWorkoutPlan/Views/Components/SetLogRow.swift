@@ -12,10 +12,13 @@ struct SetLogRow: View {
     let exercise: Exercise
     let seasonColor: Color
     /// Most recent logged SetLog for this exercise name (for "Prev:" display).
+    /// Weight is stored canonical in lbs.
     let prevSetForThisExercise: SetLog?
     @Binding var completedSets: [String: Bool]
     @Binding var logWeights: [String: String]
     let userPlateProfile: PlateProfile
+    /// User's current weight unit. Affects placeholder, prev display, plate calc.
+    let weightUnit: WeightUnit
     /// Called when the user marks the set complete (starts rest timer, etc.).
     let onComplete: () -> Void
 
@@ -35,9 +38,17 @@ struct SetLogRow: View {
     private var prevDisplay: String? {
         guard let p = prevSetForThisExercise, !p.weight.isEmpty else { return nil }
         let rStr = p.reps.isEmpty ? "?" : p.reps
-        return "\(p.weight)×\(rStr)"
+        // Prev weight is canonical lbs in storage; convert to the user's preferred display unit.
+        let displayWeight: String
+        if let lbsVal = Double(p.weight) {
+            displayWeight = WeightFormat.display(lbsVal, unit: weightUnit, decimals: 1, includeUnit: false)
+        } else {
+            displayWeight = p.weight
+        }
+        return "\(displayWeight)×\(rStr)"
     }
 
+    /// User-typed weight is in their CURRENT display unit (lbs or kg).
     private var currentWeight: Double? {
         guard let wStr = logWeights[weightKey], !wStr.isEmpty else { return nil }
         return Double(wStr)
@@ -49,10 +60,13 @@ struct SetLogRow: View {
         VStack(alignment: .leading, spacing: 4) {
             mainRow
             if showPlateCalc, let w = currentWeight, w > 0 {
+                // PlateCalculator receives the value in the user's CURRENT unit
+                // plus the plate set + barbell appropriate for that unit.
                 PlateCalculator(
-                    weightLbs: w,
-                    barbellLbs: userPlateProfile.barbellLbs,
-                    availablePlates: userPlateProfile.availablePlatesLbs
+                    weight: w,
+                    barbell: weightUnit.defaultBarbell,
+                    availablePlates: weightUnit.defaultPlates,
+                    unit: weightUnit
                 )
                 .padding(.leading, 30)
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -100,7 +114,7 @@ struct SetLogRow: View {
         // Tapping the field label area toggles the plate calculator;
         // the actual TextField still accepts input normally.
         VStack(spacing: 0) {
-            TextField(prevWeight ?? "Lbs", text: Binding(
+            TextField(prevWeightDisplay ?? weightUnit.label.capitalized, text: Binding(
                 get: { logWeights[weightKey] ?? "" },
                 set: { logWeights[weightKey] = $0 }
             ))
@@ -118,10 +132,10 @@ struct SetLogRow: View {
                     .stroke(showPlateCalc ? seasonColor.opacity(0.5) : AppColor.border2, lineWidth: 1)
             )
             .onTapGesture {
-                // First tap populates from previous if empty
+                // First tap populates from previous if empty (converted to display unit).
                 if logWeights[weightKey] == nil || logWeights[weightKey]!.isEmpty,
-                   let prev = prevSetForThisExercise, !prev.weight.isEmpty {
-                    logWeights[weightKey] = prev.weight
+                   let prevStr = prevWeightDisplay {
+                    logWeights[weightKey] = prevStr
                 }
                 withAnimation(.easeInOut(duration: 0.2)) {
                     showPlateCalc.toggle()
@@ -215,9 +229,11 @@ struct SetLogRow: View {
 
     // MARK: - Helpers
 
-    private var prevWeight: String? {
+    /// Previous weight string in the user's current display unit (converted from canonical lbs).
+    private var prevWeightDisplay: String? {
         guard let p = prevSetForThisExercise, !p.weight.isEmpty else { return nil }
-        return p.weight
+        guard let lbsVal = Double(p.weight) else { return p.weight }
+        return WeightFormat.display(lbsVal, unit: weightUnit, decimals: 1, includeUnit: false)
     }
 
     private var prevReps: String? {
@@ -256,17 +272,19 @@ struct SetLogRow: View {
 
 // MARK: - Autoregulation Hint
 /// Shows the autoreg next-weight suggestion below the last set row of an exercise.
+/// Input is canonical lbs; display converts to user's preferred unit.
 struct AutoregHint: View {
-    let suggestedWeight: Double?
+    let suggestedWeightLbs: Double?
+    let weightUnit: WeightUnit
     let seasonColor: Color
 
     var body: some View {
-        if let w = suggestedWeight {
+        if let w = suggestedWeightLbs {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.up.right")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundColor(seasonColor.opacity(0.8))
-                Text("Next session suggestion: \(w, specifier: "%.1f") lb")
+                Text("Next session suggestion: \(WeightFormat.display(w, unit: weightUnit))")
                     .font(.monoTiny)
                     .foregroundColor(AppColor.textDimmed)
             }

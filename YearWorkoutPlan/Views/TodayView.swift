@@ -158,10 +158,12 @@ struct TodayView: View {
     // MARK: - Bodyweight Card
     private var bodyweightCard: some View {
         @Bindable var bindState = state
+        let unitLabel = state.weightUnit.label
+        let placeholder = state.weightUnit == .lbs ? "165.0 \(unitLabel)" : "75.0 \(unitLabel)"
         return CardView {
             SectionLabel(text: "Bodyweight")
             HStack(spacing: 8) {
-                MonoTextField(placeholder: "165.0 lbs", text: $bindState.todayBW)
+                MonoTextField(placeholder: placeholder, text: $bindState.todayBW)
                 Button {
                     state.logBodyweight()
                 } label: {
@@ -178,7 +180,7 @@ struct TodayView: View {
             }
             .padding(.top, 6)
             if let last = state.bodyweightLog.last {
-                Text("Last: \(last.weight, specifier: "%.1f") lbs")
+                Text("Last: \(WeightFormat.display(last.weight, unit: state.weightUnit))")
                     .font(.monoLabel)
                     .foregroundColor(AppColor.textDimmed)
                     .padding(.top, 4)
@@ -243,6 +245,7 @@ struct TodayView: View {
                         completedSets: $bindState.completedSets,
                         logWeights: $bindState.logWeights,
                         userPlateProfile: state.userProfile.plateProfile,
+                        weightUnit: state.weightUnit,
                         onSwap: {
                             swapTarget = SwapTarget(originalName: ex.name, exIndex: i)
                         },
@@ -354,6 +357,7 @@ private struct ExerciseBlockView: View {
     @Binding var completedSets: [String: Bool]
     @Binding var logWeights: [String: String]
     let userPlateProfile: PlateProfile
+    let weightUnit: WeightUnit
     let onSwap: () -> Void
     let onRevert: () -> Void
 
@@ -425,12 +429,13 @@ private struct ExerciseBlockView: View {
                     completedSets: $completedSets,
                     logWeights: $logWeights,
                     userPlateProfile: userPlateProfile,
+                    weightUnit: weightUnit,
                     onComplete: {}  // completion side-effects handled inside SetLogRow
                 )
             }
 
             // Autoreg hint below the last set
-            AutoregHint(suggestedWeight: suggestedWeight, seasonColor: seasonColor)
+            AutoregHint(suggestedWeightLbs: suggestedWeight, weightUnit: weightUnit, seasonColor: seasonColor)
         }
         .padding(.vertical, 6)
     }

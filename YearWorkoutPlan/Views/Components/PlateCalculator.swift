@@ -3,10 +3,12 @@ import SwiftUI
 // MARK: - Plate Calculator
 /// Stateless view that renders a horizontal barbell plate diagram for a given load.
 /// Greedy algorithm (largest plate first) mirrors real gym plate selection.
+/// All inputs are in the user's CURRENT unit (lbs or kg) — no conversion done here.
 struct PlateCalculator: View {
-    let weightLbs: Double
-    let barbellLbs: Double
-    let availablePlates: [Double]  // sorted descending by caller or here
+    let weight: Double
+    let barbell: Double
+    let availablePlates: [Double]
+    let unit: WeightUnit
 
     var body: some View {
         let stack = platesPerSide()
@@ -26,7 +28,7 @@ struct PlateCalculator: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 3) {
                             ForEach(Array(stack.enumerated()), id: \.offset) { _, plate in
-                                PlateRect(weightLbs: plate)
+                                PlateRect(value: plate, unit: unit)
                             }
                         }
                     }
@@ -34,7 +36,7 @@ struct PlateCalculator: View {
             }
 
             // Barbell + total weight reminder
-            Text("Bar \(Int(barbellLbs)) lb · Total \(Int(weightLbs)) lb")
+            Text("Bar \(formatted(barbell)) \(unit.label) · Total \(formatted(weight)) \(unit.label)")
                 .font(.monoTiny)
                 .foregroundColor(AppColor.textVeryFaint)
         }
@@ -43,18 +45,17 @@ struct PlateCalculator: View {
     // MARK: - Greedy plate computation
 
     /// Returns the ordered list of plate weights (one side) needed to reach the target load.
-    /// Unused weight (< 1.25 lb) is silently ignored — no fractional plates.
+    /// Unused weight (< smallest plate) is silently ignored — no fractional plates.
     private func platesPerSide() -> [Double] {
-        let perSide = (weightLbs - barbellLbs) / 2.0
+        let perSide = (weight - barbell) / 2.0
         guard perSide > 0 else { return [] }
 
-        // Sort available plates descending so greedy picks largest first
         let sorted = availablePlates.sorted(by: >)
         var remaining = perSide
         var result: [Double] = []
 
         for plate in sorted {
-            while remaining >= plate - 0.01 {  // 0.01 tolerance for floating point
+            while remaining >= plate - 0.01 {  // floating-point tolerance
                 result.append(plate)
                 remaining -= plate
             }
@@ -62,12 +63,19 @@ struct PlateCalculator: View {
 
         return result
     }
+
+    private func formatted(_ v: Double) -> String {
+        v == v.rounded() ? "\(Int(v))" : String(format: "%.1f", v)
+    }
 }
 
 // MARK: - Plate Rectangle
-/// Single colored plate tile. Standard IPF/gym colour conventions.
+/// Single colored plate tile. Color conventions:
+///   lbs gym plates — IPF-adjacent colors (45 red, 35 blue, 25 green, …)
+///   kg gym plates — IWF official competition colors (25 red, 20 blue, 15 yellow, 10 green, 5 white, 2.5 red, 1.25 chrome)
 private struct PlateRect: View {
-    let weightLbs: Double
+    let value: Double
+    let unit: WeightUnit
 
     var body: some View {
         VStack(spacing: 2) {
@@ -84,37 +92,42 @@ private struct PlateRect: View {
         }
     }
 
-    // MARK: Colours (loosely based on IWF/IPF colour convention adapted for lbs)
     private var plateColor: Color {
-        switch weightLbs {
-        case 45:   return Color(hex: "#DC2626")  // red
-        case 35:   return Color(hex: "#2563EB")  // blue
-        case 25:   return Color(hex: "#16A34A")  // green
-        case 10:   return Color(hex: "#D1D5DB")  // white/light grey
-        case 5:    return Color(hex: "#3B82F6")  // lighter blue
-        case 2.5:  return Color(hex: "#EF4444")  // lighter red
-        case 1.25: return Color(hex: "#9CA3AF")  // chrome / grey
-        default:   return Color(hex: "#6B7280")  // unknown — muted grey
+        if unit == .kg {
+            // IWF competition color codes for kg plates
+            switch value {
+            case 25:   return Color(hex: "#DC2626")  // red
+            case 20:   return Color(hex: "#2563EB")  // blue
+            case 15:   return Color(hex: "#F59E0B")  // yellow
+            case 10:   return Color(hex: "#16A34A")  // green
+            case 5:    return Color(hex: "#D1D5DB")  // white
+            case 2.5:  return Color(hex: "#EF4444")  // red (small)
+            case 1.25: return Color(hex: "#9CA3AF")  // chrome
+            default:   return Color(hex: "#6B7280")
+            }
+        } else {
+            // Lb plates
+            switch value {
+            case 45:   return Color(hex: "#DC2626")
+            case 35:   return Color(hex: "#2563EB")
+            case 25:   return Color(hex: "#16A34A")
+            case 10:   return Color(hex: "#D1D5DB")
+            case 5:    return Color(hex: "#3B82F6")
+            case 2.5:  return Color(hex: "#EF4444")
+            case 1.25: return Color(hex: "#9CA3AF")
+            default:   return Color(hex: "#6B7280")
+            }
         }
     }
 
     private var plateWidth: CGFloat {
-        switch weightLbs {
-        case 45:   return 18
-        case 35:   return 16
-        case 25:   return 14
-        case 10:   return 11
-        case 5:    return 9
-        case 2.5:  return 7
-        default:   return 7
-        }
+        // Width tracks visual heft of the largest available plate in each unit set
+        let max: Double = unit == .kg ? 25 : 45
+        let ratio = value / max
+        return CGFloat(max * 0.4 * ratio + 8)
     }
 
     private var plateLabel: String {
-        // Show "45", "10", "2.5" etc. without trailing zero for whole numbers
-        if weightLbs == weightLbs.rounded() {
-            return "\(Int(weightLbs))"
-        }
-        return String(format: "%.1f", weightLbs)
+        value == value.rounded() ? "\(Int(value))" : String(format: "%.1f", value)
     }
 }

@@ -30,6 +30,7 @@ struct SettingsView: View {
                 AppColor.appBackground.ignoresSafeArea()
                 ScrollView {
                     VStack(spacing: 12) {
+                        unitsSection
                         programStartSection
                         profileSection
                         plateSection
@@ -60,6 +61,48 @@ struct SettingsView: View {
             .preferredColorScheme(.dark)
         }
         .onAppear { loadFromState() }
+    }
+
+    // MARK: - Units Section
+
+    /// Weight unit preference (lbs ↔ kg). Storage stays canonical (lbs); this
+    /// only affects display + input. No data migration needed.
+    private var unitsSection: some View {
+        @Bindable var bindState = state
+
+        return CardView {
+            SectionLabel(text: "Units")
+                .padding(.bottom, 8)
+
+            HStack(spacing: 0) {
+                ForEach(WeightUnit.allCases, id: \.self) { unit in
+                    let isSelected = state.weightUnit == unit
+                    Button {
+                        state.weightUnit = unit
+                    } label: {
+                        Text(unit.label.uppercased())
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .tracking(1.5)
+                            .foregroundColor(isSelected ? .black : AppColor.textDimmed)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(isSelected ? state.season.color : AppColor.cardBackground2)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(AppColor.border2, lineWidth: 1)
+            )
+            .padding(.top, 4)
+
+            Text("All weights — bodyweight, lifts, PRs, plate calculator — switch immediately. Stored data is unchanged.")
+                .font(.monoTiny)
+                .foregroundColor(AppColor.textFaint)
+                .padding(.top, 8)
+        }
     }
 
     // MARK: - Program Start Section

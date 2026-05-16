@@ -125,16 +125,17 @@ struct StatsView: View {
             }
             .padding(.top, 8)
 
-            // PR number
+            // PR number — stored in canonical lbs; display in user's preferred unit
             if let pr = state.prLog[state.statsLift] {
-                let displayValue: Double = statsMode == .oneRM
-                    ? epley1RM(weight: pr, reps: 1)  // PR weight as single rep = itself
+                let displayLbs: Double = statsMode == .oneRM
+                    ? epley1RM(weight: pr, reps: 1)
                     : pr
+                let unit = state.weightUnit
                 HStack(alignment: .lastTextBaseline, spacing: 8) {
-                    Text("\(displayValue, specifier: "%.1f")")
+                    Text(WeightFormat.display(displayLbs, unit: unit, decimals: 1, includeUnit: false))
                         .font(.system(size: 36, weight: .semibold, design: .monospaced))
                         .foregroundColor(state.season.color)
-                    SectionLabel(text: statsMode == .oneRM ? "est 1RM (lbs)" : "lbs PR")
+                    SectionLabel(text: statsMode == .oneRM ? "est 1RM (\(unit.label))" : "\(unit.label) PR")
                 }
                 .padding(.top, 12)
             }
@@ -239,18 +240,21 @@ struct StatsView: View {
             }
 
             if let a = avg7 {
+                let unit = state.weightUnit
                 HStack(spacing: 24) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(a, specifier: "%.1f")")
+                        Text(WeightFormat.display(a, unit: unit, decimals: 1, includeUnit: false))
                             .font(.monoBig)
                             .foregroundColor(AppColor.textPrimary)
-                        Text("7-DAY AVG (lbs)")
+                        Text("7-DAY AVG (\(unit.label))")
                             .font(.monoTiny)
                             .foregroundColor(AppColor.textFaint)
                     }
                     if let d = diff {
+                        // Delta is a difference of canonical-lbs values; convert to user unit.
+                        let displayDelta = WeightConverter.fromCanonical(d, to: unit)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\(d >= 0 ? "+" : "")\(d, specifier: "%.1f")")
+                            Text("\(displayDelta >= 0 ? "+" : "")\(displayDelta, specifier: "%.1f")")
                                 .font(.monoBig)
                                 .foregroundColor(d > 0 ? AppColor.fall : AppColor.spring)
                             Text("VS PREV WEEK")
