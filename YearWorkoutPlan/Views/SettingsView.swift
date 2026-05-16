@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State private var travelEnabled: Bool = false
     @State private var healthRefreshMessage: String? = nil
     @State private var isRefreshing: Bool = false
+    @State private var showBloodwork: Bool = false
 
     private let standardPlates: [Double] = [45, 35, 25, 10, 5, 2.5, 1.25]
 
@@ -32,6 +33,7 @@ struct SettingsView: View {
                         healthKitSection
                         autoregSection
                         travelModeSection
+                        bloodworkSection
                         resetSection
                         Spacer().frame(height: 30)
                     }
@@ -270,6 +272,37 @@ struct SettingsView: View {
                         .colorScheme(.dark)
                         .labelsHidden()
                 }
+            }
+        }
+    }
+
+    // MARK: - Bloodwork Section
+
+    private var bloodworkSection: some View {
+        CardView {
+            SectionLabel(text: "Bloodwork")
+                .padding(.bottom, 8)
+
+            Button {
+                showBloodwork = true
+            } label: {
+                HStack {
+                    Image(systemName: "drop.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(AppColor.fall)
+                    Text("View Bloodwork Log")
+                        .font(.appBody)
+                        .foregroundColor(AppColor.textSecondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11))
+                        .foregroundColor(AppColor.textFaint)
+                }
+            }
+            .buttonStyle(.plain)
+            .sheet(isPresented: $showBloodwork) {
+                BloodworkView()
+                    .environment(state)
             }
         }
     }

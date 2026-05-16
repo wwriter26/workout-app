@@ -36,6 +36,12 @@ struct ContentView: View {
 
             // Custom bottom tab bar overlaid at the bottom
             bottomTabBar
+
+            // Rest timer overlay — global so it persists when switching tabs.
+            // Sits above the tab bar (padding pushes it clear of the bar) but
+            // below any sheets, which is the correct z-order for a floating HUD.
+            RestTimerView(seasonColor: appState.season.color)
+                .padding(.bottom, 64)  // clear the 56 pt tab bar + safe area gap
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showSettings) {

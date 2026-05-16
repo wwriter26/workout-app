@@ -40,6 +40,11 @@
 		AA000000000000009A /* MoodSliderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000009A /* MoodSliderCard.swift */; };
 		AA00000000000000AA /* SupplementAdherenceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000AA /* SupplementAdherenceCard.swift */; };
 		AA00000000000000BA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000BA /* SettingsView.swift */; };
+		CC2B000000000001A /* MuscleGroupMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000001B /* MuscleGroupMap.swift */; };
+		CC2B000000000002A /* HexagonRadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000002B /* HexagonRadarView.swift */; };
+		CC2B000000000003A /* HexagonStatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000003B /* HexagonStatsCard.swift */; };
+		CC2B000000000004A /* AssessmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000004B /* AssessmentView.swift */; };
+		CC2B000000000005A /* BloodworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000005B /* BloodworkView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -77,6 +82,11 @@
 		BB000000000000009A /* MoodSliderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodSliderCard.swift; sourceTree = "<group>"; };
 		BB00000000000000AA /* SupplementAdherenceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplementAdherenceCard.swift; sourceTree = "<group>"; };
 		BB00000000000000BA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CC2B000000000001B /* MuscleGroupMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MuscleGroupMap.swift; sourceTree = "<group>"; };
+		CC2B000000000002B /* HexagonRadarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexagonRadarView.swift; sourceTree = "<group>"; };
+		CC2B000000000003B /* HexagonStatsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexagonStatsCard.swift; sourceTree = "<group>"; };
+		CC2B000000000004B /* AssessmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentView.swift; sourceTree = "<group>"; };
+		CC2B000000000005B /* BloodworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloodworkView.swift; sourceTree = "<group>"; };
 		C001000000000001 /* YearWorkoutPlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YearWorkoutPlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -120,6 +130,7 @@
 				B001000000000032 /* MobilityCatalog.swift */,
 				BB000000000000001A /* PerformanceModels.swift */,
 				BB000000000000002A /* Autoregulation.swift */,
+				CC2B000000000001B /* MuscleGroupMap.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -147,6 +158,9 @@
 				BB000000000000009A /* MoodSliderCard.swift */,
 				BB00000000000000AA /* SupplementAdherenceCard.swift */,
 				BB00000000000000BA /* SettingsView.swift */,
+				CC2B000000000003B /* HexagonStatsCard.swift */,
+				CC2B000000000004B /* AssessmentView.swift */,
+				CC2B000000000005B /* BloodworkView.swift */,
 				E001000000000005 /* Components */,
 			);
 			path = Views;
@@ -168,6 +182,7 @@
 				BB000000000000006A /* PlateCalculator.swift */,
 				BB000000000000007A /* SetLogRow.swift */,
 				BB000000000000008A /* RecoveryBanner.swift */,
+				CC2B000000000002B /* HexagonRadarView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -289,6 +304,11 @@
 				AA000000000000009A /* MoodSliderCard.swift in Sources */,
 				AA00000000000000AA /* SupplementAdherenceCard.swift in Sources */,
 				AA00000000000000BA /* SettingsView.swift in Sources */,
+				CC2B000000000001A /* MuscleGroupMap.swift in Sources */,
+				CC2B000000000002A /* HexagonRadarView.swift in Sources */,
+				CC2B000000000003A /* HexagonStatsCard.swift in Sources */,
+				CC2B000000000004A /* AssessmentView.swift in Sources */,
+				CC2B000000000005A /* BloodworkView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

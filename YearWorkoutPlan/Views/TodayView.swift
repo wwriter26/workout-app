@@ -7,39 +7,35 @@ struct TodayView: View {
 
     var body: some View {
         @Bindable var bindState = state
-        ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(spacing: 10) {
-                    RecoveryBanner()
-                    headerCard
-                    SupplementAdherenceCard()
-                    MoodSliderCard()
-                    bodyweightCard
-                    sessionCard
-                    weekAdjusterCard
-                    mobilityCard
-                    Spacer().frame(height: 80)  // space for rest timer overlay
-                }
-                .padding(.horizontal, 14)
-                .padding(.top, 12)
-                .padding(.bottom, 20)
+        // RestTimerView has been promoted to ContentView so it persists across tabs.
+        // TodayView no longer needs its own ZStack wrapper for the overlay.
+        ScrollView {
+            VStack(spacing: 10) {
+                RecoveryBanner()
+                headerCard
+                SupplementAdherenceCard()
+                MoodSliderCard()
+                bodyweightCard
+                sessionCard
+                weekAdjusterCard
+                mobilityCard
+                Spacer().frame(height: 80)  // bottom breathing room
             }
-            .scrollDismissesKeyboard(.interactively)
-            .sheet(item: $swapTarget) { target in
-                SwapExerciseSheet(
-                    target: target,
-                    seasonColor: state.season.color
-                ) { originalName, newName in
-                    state.swap(week: state.currentWeek,
-                               day: state.todayDayKey,
-                               originalName: originalName,
-                               newName: newName)
-                }
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .sheet(item: $swapTarget) { target in
+            SwapExerciseSheet(
+                target: target,
+                seasonColor: state.season.color
+            ) { originalName, newName in
+                state.swap(week: state.currentWeek,
+                           day: state.todayDayKey,
+                           originalName: originalName,
+                           newName: newName)
             }
-
-            // Rest timer overlay — floats above scroll content, below tab bar
-            RestTimerView(seasonColor: state.season.color)
-                .padding(.bottom, 8)
         }
     }
 
