@@ -39,6 +39,9 @@ enum Schedules {
                 Exercise(name: "Cable lateral raise",          sets: 4, reps: "12–15",  load: "Light",       rir: "0–1", rest: "45s"),
                 Exercise(name: "Triceps rope pushdown",        sets: 3, reps: "12",     load: "Moderate",    rir: "0–1", rest: "45s"),
                 Exercise(name: "Plank → side plank",           sets: 3, reps: "30s ea", load: "BW",          rir: "—",   rest: "30s"),
+                // Z2 add-on: low CNS cost; separates nicely from the push work.
+                // Adds a second weekly Z2 session without impeding recovery.
+                Exercise(name: "Z2 walk or easy spin (optional)", sets: 1, reps: "30 min", load: "60–65% HRmax", rir: "—", rest: "—"),
             ]
         ),
         "Wed": Session(
@@ -79,23 +82,32 @@ enum Schedules {
                 Exercise(name: "Leg press",                    sets: 3, reps: "10–12", load: "Heavy",      rir: "1",   rest: "90s"),
                 Exercise(name: "Lying leg curl",               sets: 3, reps: "12",    load: "Moderate",   rir: "0–1", rest: "60s"),
                 Exercise(name: "Standing calf raise",          sets: 4, reps: "12",    load: "Moderate",   rir: "0–1", rest: "45s"),
+                // Grip/carry on lower days: functional strength + forearm hypertrophy
+                // without meaningful additional CNS cost on this moderate-high day.
+                Exercise(name: "Farmer's carry",               sets: 2, reps: "60s",   load: "Heavy DBs",  rir: "—",   rest: "90s"),
             ]
         ),
         "Sat": Session(
             dayKey: "Sat",
-            label: "Zone 2",
+            label: "Long Zone 2",
             cnsLoad: .low,
             isCardio: true,
             exercises: [
-                Exercise(name: "Zone 2 cardio", sets: 1, reps: "60–75 min", load: "60–70% HRmax", rir: "—", rest: "—"),
+                // Bumped to 60–90 min to make Saturday the primary long Z2 session.
+                // Combined with the Tue add-on and Sun option, this achieves Z2 3–4x/wk.
+                Exercise(name: "Zone 2 cardio", sets: 1, reps: "60–90 min", load: "60–70% HRmax", rir: "—", rest: "—"),
             ]
         ),
         "Sun": Session(
             dayKey: "Sun",
-            label: "Rest",
+            label: "Rest or Z2 30–45 min",
             cnsLoad: .rest,
             isCardio: false,
-            exercises: []
+            exercises: [
+                // Optional third/fourth Z2 slot. Low-effort walking counts.
+                // Leave isCardio false so TodayView shows it as a rest day by default.
+                Exercise(name: "Optional Z2 walk or easy bike", sets: 1, reps: "30–45 min", load: "60–65% HRmax", rir: "—", rest: "—"),
+            ]
         ),
     ]
 
@@ -107,12 +119,15 @@ enum Schedules {
             cnsLoad: .high,
             isCardio: false,
             exercises: [
-                Exercise(name: "Back squat",            sets: 5, reps: "3",   load: "87% 1RM",  rir: "1–2", rest: "4min"),
-                Exercise(name: "Pause squat",           sets: 3, reps: "3",   load: "75% 1RM",  rir: "2",   rest: "3min"),
-                Exercise(name: "Front squat",           sets: 3, reps: "5",   load: "70% 1RM",  rir: "2",   rest: "2min"),
-                Exercise(name: "Romanian deadlift",     sets: 3, reps: "6",   load: "Heavy",    rir: "2",   rest: "2min"),
-                Exercise(name: "Leg curl",              sets: 3, reps: "8",   load: "Moderate", rir: "1",   rest: "90s"),
-                Exercise(name: "Standing calf",         sets: 4, reps: "8",   load: "Heavy",    rir: "1",   rest: "60s"),
+                Exercise(name: "Back squat",            sets: 5, reps: "3",    load: "87% 1RM",  rir: "1–2", rest: "4min"),
+                Exercise(name: "Pause squat",           sets: 3, reps: "3",    load: "75% 1RM",  rir: "2",   rest: "3min"),
+                Exercise(name: "Front squat",           sets: 3, reps: "5",    load: "70% 1RM",  rir: "2",   rest: "2min"),
+                Exercise(name: "Romanian deadlift",     sets: 3, reps: "6",    load: "Heavy",    rir: "2",   rest: "2min"),
+                Exercise(name: "Leg curl",              sets: 3, reps: "8",    load: "Moderate", rir: "1",   rest: "90s"),
+                Exercise(name: "Standing calf",         sets: 4, reps: "8",    load: "Heavy",    rir: "1",   rest: "60s"),
+                // Dead hang: passive grip + shoulder decompression after heavy squats.
+                // Minimal CNS cost; addresses grip/forearm gap on lower days.
+                Exercise(name: "Dead hang",             sets: 2, reps: "AMRAP",load: "BW",       rir: "—",   rest: "60s"),
             ]
         ),
         "Tue": Session(
@@ -181,10 +196,13 @@ enum Schedules {
         ),
         "Sun": Session(
             dayKey: "Sun",
-            label: "Rest",
+            label: "Rest or Z2 30 min",
             cnsLoad: .rest,
             isCardio: false,
-            exercises: []
+            exercises: [
+                // Optional Z2 slot to supplement Wed+Sat sessions toward 3x/wk target.
+                Exercise(name: "Optional Z2 walk or easy bike", sets: 1, reps: "30 min", load: "60–65% HRmax", rir: "—", rest: "—"),
+            ]
         ),
     ]
 
@@ -204,6 +222,9 @@ enum Schedules {
                 Exercise(name: "Face pulls",        sets: 3, reps: "15", load: "—", rir: "0",   rest: "45s"),
                 Exercise(name: "EZ-bar curl",       sets: 2, reps: "10", load: "—", rir: "1",   rest: "45s"),
                 Exercise(name: "Triceps rope",      sets: 2, reps: "12", load: "—", rir: "1",   rest: "45s"),
+                // Grip/carry finisher: loaded carry transfers to deadlift grip strength
+                // and is metabolically cheap enough to preserve fall's aerobic focus.
+                Exercise(name: "Farmer's carry",    sets: 2, reps: "40m", load: "Moderate-heavy DBs", rir: "—", rest: "60s"),
             ]
         ),
         "Tue": Session(
@@ -239,6 +260,9 @@ enum Schedules {
                 Exercise(name: "Incline DB press",       sets: 3, reps: "10",     load: "—",    rir: "1", rest: "75s"),
                 Exercise(name: "Hammer curl",            sets: 2, reps: "10",     load: "—",    rir: "1", rest: "60s"),
                 Exercise(name: "Skull crusher",          sets: 2, reps: "12",     load: "—",    rir: "1", rest: "60s"),
+                // Alternating carry between Mon A and Thu B covers both sessions
+                // and avoids repeating the same grip stimulus 48h apart.
+                Exercise(name: "Farmer's carry",         sets: 2, reps: "40m",    load: "Heavy DBs", rir: "—", rest: "60s"),
             ]
         ),
         "Fri": Session(
@@ -298,6 +322,9 @@ enum Schedules {
                 Exercise(name: "Face pulls",                sets: 3, reps: "15",   load: "—",     rir: "0",   rest: "45s"),
                 Exercise(name: "Barbell curl",              sets: 4, reps: "10",   load: "—",     rir: "0",   rest: "45s"),
                 Exercise(name: "Incline DB curl",           sets: 3, reps: "12",   load: "—",     rir: "0",   rest: "45s"),
+                // Low-impact Z2 add-on to complement Saturday. Pull day is CNS-moderate,
+                // making it the cleanest slot for a short aerobic stimulus in Winter.
+                Exercise(name: "Z2 walk (optional)",        sets: 1, reps: "30 min", load: "60–65% HRmax", rir: "—", rest: "—"),
             ]
         ),
         "Wed": Session(
@@ -313,6 +340,8 @@ enum Schedules {
                 Exercise(name: "Leg curl",                  sets: 4, reps: "10",   load: "—", rir: "0",   rest: "60s"),
                 Exercise(name: "Standing calf",             sets: 4, reps: "10",   load: "—", rir: "0",   rest: "45s"),
                 Exercise(name: "Seated calf",               sets: 3, reps: "15",   load: "—", rir: "0",   rest: "45s"),
+                // Loaded carry at end of leg day: grip + core stability, low extra fatigue.
+                Exercise(name: "Farmer's carry",            sets: 2, reps: "40m",  load: "Heavy DBs", rir: "—", rest: "60s"),
             ]
         ),
         "Thu": Session(
@@ -343,6 +372,9 @@ enum Schedules {
                 Exercise(name: "Lying leg curl",            sets: 4, reps: "12",     load: "—", rir: "0", rest: "60s"),
                 Exercise(name: "Glute-ham raise",           sets: 3, reps: "10",     load: "—", rir: "0", rest: "60s"),
                 Exercise(name: "Calf raise",                sets: 4, reps: "12",     load: "—", rir: "0", rest: "45s"),
+                // Dead hang: passive shoulder decompression + grip. Pairs with Wed carry
+                // to ensure grip work on both winter lower days without adding volume.
+                Exercise(name: "Dead hang",                 sets: 2, reps: "AMRAP",  load: "BW",rir: "—", rest: "60s"),
             ]
         ),
         "Sat": Session(
@@ -357,10 +389,13 @@ enum Schedules {
         ),
         "Sun": Session(
             dayKey: "Sun",
-            label: "Rest",
+            label: "Rest or Z2 30 min",
             cnsLoad: .rest,
             isCardio: false,
-            exercises: []
+            exercises: [
+                // Optional third Z2 session to reach 3x/wk alongside Tue and Sat.
+                Exercise(name: "Optional Z2 walk or easy bike", sets: 1, reps: "30 min", load: "60–65% HRmax", rir: "—", rest: "—"),
+            ]
         ),
     ]
 

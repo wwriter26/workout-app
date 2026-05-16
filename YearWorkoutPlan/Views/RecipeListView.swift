@@ -1,52 +1,111 @@
 import SwiftUI
 
+// MARK: - Filter Chip Model
+/// The filter chips shown at the top of RecipeListView.
+/// Each chip maps to one or more RecipeTags for OR-logic matching.
+private struct FilterChip: Identifiable, Equatable {
+    let id: String
+    let label: String
+    let tags: [RecipeTag]
+
+    static let all: [FilterChip] = [
+        FilterChip(id: "all",      label: "All",         tags: []),
+        FilterChip(id: "training", label: "Training",     tags: [.trainingDay]),
+        FilterChip(id: "rest",     label: "Rest Day",     tags: [.restDay]),
+        FilterChip(id: "prewo",    label: "Pre-WO",       tags: [.preWO]),
+        FilterChip(id: "postwo",   label: "Post-WO",      tags: [.postWO]),
+        FilterChip(id: "prebed",   label: "Pre-Bed",      tags: [.preBed]),
+        FilterChip(id: "hiproto",  label: "High Protein", tags: [.highProtein, .eliteProtein]),
+        FilterChip(id: "fiber",    label: "High Fiber",   tags: [.highFiber]),
+        FilterChip(id: "omega3",   label: "Omega-3",      tags: [.omega3Rich]),
+        FilterChip(id: "quick",    label: "Quick (<15m)", tags: [.under5, .under15]),
+    ]
+}
+
 // MARK: - Recipe List View
 /// Displayed inside the "recipes" sub-tab of PlanView.
+/// Supports multi-select OR-logic tag filtering and shows elite nutritional badges.
 struct RecipeListView: View {
     @Environment(AppState.self) private var state
     @State private var showAddRecipe = false
     @State private var expandedBuiltIn: Int? = nil
     @State private var expandedUserRecipe: UUID? = nil
+    /// Multi-select: empty means "All". OR logic — a recipe matches if it shares
+    /// any tag with any active chip.
+    @State private var activeFilters: Set<String> = []
+
+    // MARK: Filtering + Sorting
+
+    private var filteredBuiltIn: [BuiltInRecipe] {
+        let chips = activeTags
+        let base = chips.isEmpty
+            ? BuiltInRecipes.all
+            : BuiltInRecipes.all.filter { recipe in
+                chips.contains { tag in recipe.tags.contains(tag) }
+            }
+        return sortedBuiltIn(base)
+    }
+
+    private var filteredUserRecipes: [UserRecipe] {
+        let chips = activeTags
+        guard !chips.isEmpty else { return state.userRecipes }
+        return state.userRecipes.filter { recipe in
+            chips.contains { tag in recipe.tags.contains(tag) }
+        }
+    }
+
+    /// Collapsed set of active RecipeTags from selected filter chips.
+    private var activeTags: [RecipeTag] {
+        FilterChip.all
+            .filter { activeFilters.contains($0.id) }
+            .flatMap(\.tags)
+    }
+
+    /// Sort: anySeason first, then current-season tagged, then the rest.
+    private func sortedBuiltIn(_ recipes: [BuiltInRecipe]) -> [BuiltInRecipe] {
+        let currentSeasonTag = currentSeasonTag()
+        return recipes.sorted { a, b in
+            let aAny = a.tags.contains(.anySeason)
+            let bAny = b.tags.contains(.anySeason)
+            let aSeason = a.tags.contains(currentSeasonTag)
+            let bSeason = b.tags.contains(currentSeasonTag)
+            if aAny != bAny { return aAny }
+            if aSeason != bSeason { return aSeason }
+            return a.id < b.id
+        }
+    }
+
+    private func currentSeasonTag() -> RecipeTag {
+        switch state.season.name {
+        case "Spring": return .spring
+        case "Summer": return .summer
+        case "Fall":   return .fall
+        default:       return .winter
+        }
+    }
+
+    // MARK: Body
 
     var body: some View {
         VStack(spacing: 10) {
-            // Add custom recipe button
-            HStack {
-                Spacer()
-                Button {
-                    showAddRecipe = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 13, weight: .bold))
-                        Text("ADD RECIPE")
-                            .font(.system(size: 11, weight: .bold, design: .default))
-                            .tracking(0.8)
-                    }
-                    .foregroundColor(state.season.color)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(state.season.color.opacity(0.13))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(state.season.color.opacity(0.4), lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.bottom, 2)
+            filterChipBar
+            addRecipeButton
 
             // Built-in recipes
-            SectionLabel(text: "Built-In Recipes")
+            SectionLabel(text: "Built-In Recipes (\(filteredBuiltIn.count))")
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 4)
 
-            ForEach(BuiltInRecipes.all) { recipe in
-                RecipeCard(
+            ForEach(filteredBuiltIn) { recipe in
+                EnhancedRecipeCard(
                     name: recipe.name,
                     prepTime: recipe.prepTime,
                     macros: recipe.macros,
+                    tags: recipe.tags,
+                    fiber: recipe.fiber,
+                    omega3: recipe.omega3,
+                    polyphenolNote: recipe.polyphenolNote,
+                    whyElite: recipe.whyElite,
                     ingredients: recipe.ingredients,
                     steps: recipe.steps,
                     isExpanded: expandedBuiltIn == recipe.id,
@@ -60,16 +119,21 @@ struct RecipeListView: View {
             }
 
             // User recipes
-            if !state.userRecipes.isEmpty {
-                SectionLabel(text: "My Recipes")
+            if !filteredUserRecipes.isEmpty {
+                SectionLabel(text: "My Recipes (\(filteredUserRecipes.count))")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 8)
 
-                ForEach(state.userRecipes) { recipe in
-                    RecipeCard(
+                ForEach(filteredUserRecipes) { recipe in
+                    EnhancedRecipeCard(
                         name: recipe.name,
                         prepTime: recipe.prepTime,
                         macros: recipe.macros,
+                        tags: recipe.tags,
+                        fiber: recipe.fiber,
+                        omega3: recipe.omega3,
+                        polyphenolNote: recipe.polyphenolNote,
+                        whyElite: recipe.whyElite,
                         ingredients: recipe.ingredients,
                         steps: recipe.steps,
                         isExpanded: expandedUserRecipe == recipe.id,
@@ -82,6 +146,13 @@ struct RecipeListView: View {
                     )
                 }
             }
+
+            if filteredBuiltIn.isEmpty && filteredUserRecipes.isEmpty {
+                Text("No recipes match the selected filters.")
+                    .font(.appBody)
+                    .foregroundColor(AppColor.textFaint)
+                    .padding(.top, 20)
+            }
         }
         .sheet(isPresented: $showAddRecipe) {
             AddRecipeView(seasonColor: state.season.color) { newRecipe in
@@ -89,22 +160,101 @@ struct RecipeListView: View {
             }
         }
     }
+
+    // MARK: Subviews
+
+    private var addRecipeButton: some View {
+        HStack {
+            Spacer()
+            Button {
+                showAddRecipe = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("ADD RECIPE")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(0.8)
+                }
+                .foregroundColor(state.season.color)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(state.season.color.opacity(0.13))
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(state.season.color.opacity(0.4), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var filterChipBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(FilterChip.all) { chip in
+                    let isActive = chip.id == "all"
+                        ? activeFilters.isEmpty
+                        : activeFilters.contains(chip.id)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            if chip.id == "all" {
+                                activeFilters = []
+                            } else {
+                                if activeFilters.contains(chip.id) {
+                                    activeFilters.remove(chip.id)
+                                } else {
+                                    activeFilters.insert(chip.id)
+                                }
+                            }
+                        }
+                    } label: {
+                        Text(chip.label)
+                            .font(.monoTiny)
+                            .foregroundColor(isActive ? state.season.color : AppColor.textDimmed)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(isActive ? state.season.color.opacity(0.13) : AppColor.cardBackground)
+                            .cornerRadius(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(isActive ? state.season.color.opacity(0.5) : AppColor.border2, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.bottom, 4)
+        }
+    }
 }
 
-// MARK: - Recipe Card
-private struct RecipeCard: View {
+// MARK: - Enhanced Recipe Card
+/// Extends the Wave 1 RecipeCard with tag chips, fiber/omega-3 badges,
+/// and a "Why this is elite" rationale line.
+private struct EnhancedRecipeCard: View {
     let name: String
     let prepTime: String
     let macros: RecipeMacros
+    let tags: [RecipeTag]
+    let fiber: Int
+    let omega3: Double
+    let polyphenolNote: String?
+    let whyElite: String
     let ingredients: [String]
     let steps: [String]
     let isExpanded: Bool
     let seasonColor: Color
     let onTap: () -> Void
 
+    // Show at most 3 tag chips inline; overflow shown as "+N"
+    private var visibleTags: [RecipeTag] { Array(tags.prefix(3)) }
+    private var hiddenTagCount: Int { max(0, tags.count - 3) }
+
     var body: some View {
         CardView {
-            // Header row (always visible)
+            // --- Header (always visible) ---
             Button(action: onTap) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -131,7 +281,7 @@ private struct RecipeCard: View {
             }
             .buttonStyle(.plain)
 
-            // Macro tiles (always visible)
+            // --- Macro tiles (always visible) ---
             HStack(spacing: 8) {
                 MacroTile(value: macros.protein, unit: "P", color: seasonColor)
                 MacroTile(value: macros.carbs,   unit: "C", color: AppColor.summer)
@@ -139,11 +289,41 @@ private struct RecipeCard: View {
             }
             .padding(.top, 8)
 
-            // Expanded detail
+            // --- Elite nutritional badges ---
+            eliteBadgeRow
+
+            // --- Tag chips (up to 3 + overflow count) ---
+            if !tags.isEmpty {
+                tagChipRow
+            }
+
+            // --- "Why this is elite" rationale ---
+            if !whyElite.isEmpty {
+                Text(whyElite)
+                    .font(.appSmall)
+                    .italic()
+                    .foregroundColor(AppColor.textDimmed)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+            }
+
+            // --- Expanded detail ---
             if isExpanded {
                 Divider()
                     .background(AppColor.border1)
                     .padding(.vertical, 8)
+
+                // Polyphenol sources if present
+                if let ppNote = polyphenolNote {
+                    VStack(alignment: .leading, spacing: 2) {
+                        SectionLabel(text: "Polyphenol sources")
+                        Text(ppNote)
+                            .font(.appSmall)
+                            .foregroundColor(AppColor.deload)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.bottom, 8)
+                }
 
                 SectionLabel(text: "Ingredients")
                     .padding(.bottom, 4)
@@ -172,6 +352,87 @@ private struct RecipeCard: View {
                 }
             }
         }
+    }
+
+    // MARK: Private subviews
+
+    @ViewBuilder
+    private var eliteBadgeRow: some View {
+        let showFiber  = fiber >= 10
+        let showOmega3 = omega3 >= 1.0
+        let showPoly   = polyphenolNote != nil
+
+        if showFiber || showOmega3 || showPoly {
+            HStack(spacing: 6) {
+                if showFiber {
+                    EliteBadge(icon: "leaf.fill",   label: "\(fiber)g fiber", color: AppColor.springAccent)
+                }
+                if showOmega3 {
+                    EliteBadge(icon: "drop.fill",   label: String(format: "%.1fg EPA+DHA", omega3), color: AppColor.winterAccent)
+                }
+                if showPoly {
+                    EliteBadge(icon: "star.fill",   label: "Polyphenols", color: AppColor.deload)
+                }
+                Spacer()
+            }
+            .padding(.top, 6)
+        }
+    }
+
+    private var tagChipRow: some View {
+        HStack(spacing: 4) {
+            ForEach(visibleTags) { tag in
+                TagChip(tag: tag)
+            }
+            if hiddenTagCount > 0 {
+                Text("+\(hiddenTagCount)")
+                    .font(.monoTiny)
+                    .foregroundColor(AppColor.textFaint)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(AppColor.cardBackground2)
+                    .cornerRadius(4)
+            }
+            Spacer()
+        }
+        .padding(.top, 4)
+    }
+}
+
+// MARK: - Tag Chip
+private struct TagChip: View {
+    let tag: RecipeTag
+
+    var body: some View {
+        Text(tag.displayName)
+            .font(.monoTiny)
+            .foregroundColor(tag.color)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(tag.color.opacity(0.12))
+            .cornerRadius(4)
+    }
+}
+
+// MARK: - Elite Badge
+private struct EliteBadge: View {
+    let icon: String
+    let label: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundColor(color)
+            Text(label)
+                .font(.monoTiny)
+                .foregroundColor(color)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.10))
+        .cornerRadius(4)
     }
 }
 
@@ -209,8 +470,8 @@ struct AddRecipeView: View {
     @State private var protein = ""
     @State private var carbs = ""
     @State private var fat = ""
-    @State private var ingredients = ""   // one per line
-    @State private var steps = ""         // one per line
+    @State private var ingredients = ""
+    @State private var steps = ""
 
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty
@@ -292,7 +553,6 @@ struct AddRecipeView: View {
             .background(AppColor.cardBackground)
             .cornerRadius(8)
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppColor.border2, lineWidth: 1))
-            // Placeholder text via overlay when empty
             .overlay(alignment: .topLeading) {
                 if text.wrappedValue.isEmpty {
                     Text(placeholder)
@@ -311,8 +571,14 @@ struct AddRecipeView: View {
             carbs:    Int(carbs)    ?? 0,
             fat:      Int(fat)      ?? 0
         )
-        let ingredientList = ingredients.split(separator: "\n").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let stepList = steps.split(separator: "\n").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let ingredientList = ingredients
+            .split(separator: "\n")
+            .map { String($0).trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        let stepList = steps
+            .split(separator: "\n")
+            .map { String($0).trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
 
         let recipe = UserRecipe(
             name: name.trimmingCharacters(in: .whitespaces),
@@ -320,6 +586,8 @@ struct AddRecipeView: View {
             macros: macros,
             ingredients: ingredientList,
             steps: stepList
+            // Wave 3 fields default: tags=[], fiber=0, omega3=0, polyphenolNote=nil, whyElite=""
+            // Tag editing for user recipes is a Wave 4 TODO.
         )
         onSave(recipe)
         dismiss()

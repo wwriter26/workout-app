@@ -6,9 +6,12 @@ import SwiftUI
 struct SupplementAdherenceCard: View {
     @Environment(AppState.self) private var state
 
-    // Tier 1–2 supplements only (year-round + test-driven protocols)
+    /// Only show supplements the user has explicitly added to their daily stack
+    /// (managed via PlanView's Supplements tab). Falls back to tier 1–2 when
+    /// the active set is empty, which can happen if AppState was just migrated.
     private var supplements: [Supplement] {
-        SupplementList.all.filter { $0.tier <= 2 }
+        let active = SupplementList.all.filter { state.activeSupplementIDs.contains($0.id) }
+        return active.isEmpty ? SupplementList.all.filter { $0.tier <= 2 } : active
     }
 
     var body: some View {

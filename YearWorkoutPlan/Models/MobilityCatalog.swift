@@ -1,5 +1,21 @@
 import Foundation
 
+// MARK: - Limiting Joint Track
+/// A 12-week quarterly focus protocol for whichever joint scored lowest in the
+/// user's most recent movement assessment. User selects one track per quarter.
+struct LimitingJointTrack: Identifiable {
+    let id: Int
+    let name: String
+    /// Movement screen test used to confirm progress at week 12.
+    let targetTest: String
+    /// Recommended weekly practice frequency (2–3 sessions).
+    let frequencyPerWeek: Int
+    /// The specific drills to perform each session.
+    let weeklyProtocol: [MobilityItem]
+    /// PNF contract-relax prescription for the primary joint.
+    let pnfNote: String
+}
+
 // MARK: - Mobility Item
 struct MobilityItem: Identifiable {
     let id: Int
@@ -187,5 +203,98 @@ enum MobilityCatalog {
                          durationOrReps: "30s/side",
                          cue: "Look toward armpit; add light downward hand pressure on the crown."),
         ]),
+    ]
+
+    // MARK: Quarterly Limiting-Joint Focus Tracks
+    /// Three evidence-informed 12-week protocols. Pick whichever joint tested
+    /// worst in the last assessment (sit-to-rise, shoulder flexion, knee-to-wall).
+    /// Perform the selected track 2–3× per week as an add-on to the daily routine.
+    static let limitingJointTracks: [LimitingJointTrack] = [
+
+        LimitingJointTrack(
+            id: 0,
+            name: "Hips (12-week focus)",
+            targetTest: "Sit-to-rise score ≥9/10 + 90/90 hip switch with full internal rotation",
+            frequencyPerWeek: 3,
+            weeklyProtocol: [
+                MobilityItem(id: 0,
+                             name: "90/90 PNF Hip Rotations",
+                             durationOrReps: "3 sets: 6s contract / 30s relax",
+                             cue: "In the 90/90 position, gently press the knee into the floor (6s), then relax and sink deeper (30s). PNF contract-relax beats passive stretching for ROM gains."),
+                MobilityItem(id: 1,
+                             name: "Cossack Squat",
+                             durationOrReps: "8/side",
+                             cue: "Shift weight laterally into a deep side squat while keeping the opposite leg straight. Move slowly; only go as low as your hips allow without pelvic tuck."),
+                MobilityItem(id: 2,
+                             name: "ATG Split Squat (assisted)",
+                             durationOrReps: "8/side",
+                             cue: "Hold a post or band for balance. Sink the back knee to the floor, driving the front knee far over toes. This loads the hip flexor through full range."),
+                MobilityItem(id: 3,
+                             name: "Couch Stretch (loaded)",
+                             durationOrReps: "60s/side",
+                             cue: "Back foot on wall/bench, front shin vertical. Add a light plate on the front thigh for passive load. Squeeze the glute of the back leg — don't arch lower back."),
+                MobilityItem(id: 4,
+                             name: "Pigeon Pose (passive)",
+                             durationOrReps: "90s/side",
+                             cue: "Front shin parallel to mat. Relax completely — breathe into the outer hip. If elevated, prop on a block; avoid forcing."),
+            ],
+            pnfNote: "On 90/90 position: 3 sets × 6s isometric contract (press knee down) / 30s passive relax. Re-measure sit-to-rise at week 6 and week 12."
+        ),
+
+        LimitingJointTrack(
+            id: 1,
+            name: "T-Spine (12-week focus)",
+            targetTest: "Shoulder flexion ≥170° bilateral + thoracic rotation ≥45°/side",
+            frequencyPerWeek: 3,
+            weeklyProtocol: [
+                MobilityItem(id: 0,
+                             name: "Thoracic Extension over Foam Roller",
+                             durationOrReps: "6 segments × 30s",
+                             cue: "Roller perpendicular to spine. Start at T12, work up to T1 in 1-vertebra increments. Arms crossed on chest. Breathe into each level — exhale to relax into extension."),
+                MobilityItem(id: 1,
+                             name: "Open Book (side-lying)",
+                             durationOrReps: "8/side",
+                             cue: "Knees stacked at 90°. Reach the top arm back toward the floor, rotating only the thoracic spine. Let the eye follow the hand. Keep hips stacked — no lumbar rotation."),
+                MobilityItem(id: 2,
+                             name: "Quadruped T-Spine Rotation",
+                             durationOrReps: "8/side",
+                             cue: "On all fours. Hand behind head. Lock the lumbar by bracing core, then rotate the elbow up toward the ceiling as far as possible. Only the thoracic moves."),
+                MobilityItem(id: 3,
+                             name: "Bench T-Spine Stretch",
+                             durationOrReps: "60s",
+                             cue: "Kneel in front of a bench, elbows on the surface shoulder-width. Drop your head between your arms and sink your chest toward the floor. Arms overhead as you relax deeper."),
+                MobilityItem(id: 4,
+                             name: "Wall Slides",
+                             durationOrReps: "10 reps",
+                             cue: "Stand with back against the wall, arms in W position with full contact. Slide up to Y, maintaining wrist and elbow contact throughout. If you lose contact, stop and reset."),
+            ],
+            pnfNote: "On thoracic rotation: place hand behind head, rotate to end-range, isometrically resist (press elbow toward floor) for 6s, then relax and rotate further for 30s. 3 sets/side."
+        ),
+
+        LimitingJointTrack(
+            id: 2,
+            name: "Ankles (12-week focus)",
+            targetTest: "Knee-to-wall ≥10 cm (heel-to-wall distance) + full ATG squat hold",
+            frequencyPerWeek: 3,
+            weeklyProtocol: [
+                MobilityItem(id: 0,
+                             name: "Banded Ankle Distraction PNF",
+                             durationOrReps: "3 sets: 60s/side",
+                             cue: "Band looped around ankle pulling forward (anterior direction). Drive knee over pinky toe repeatedly through full dorsiflexion range. The band distracts the talar joint, creating space for greater ROM."),
+                MobilityItem(id: 1,
+                             name: "Knee-to-Wall Mobilisation",
+                             durationOrReps: "8/side",
+                             cue: "Toes 4–5 inches from wall. Drive knee over pinky toe, keeping heel flat. Measure distance each session. Progress by moving foot further back as range improves."),
+                MobilityItem(id: 2,
+                             name: "Eccentric Calf Raise",
+                             durationOrReps: "10 reps (3s eccentric)",
+                             cue: "On a step edge. Rise on both feet; lower on one, taking 3 seconds. This builds tendon compliance (Achilles), which is often the limiting factor in ankle DF, not joint ROM."),
+                MobilityItem(id: 3,
+                             name: "ATG Squat Hold",
+                             durationOrReps: "60s",
+                             cue: "Full depth squat, heels flat. Hold a post or band for assistance as needed. Chest up, knees tracking over toes. Time increases weekly as DF improves."),
+            ],
+            pnfNote: "With banded distraction: drive knee to end-range dorsiflexion, press against a wall for 6s isometric, relax 30s. 3 sets per side. Measure knee-to-wall cm at baseline, week 6, week 12."
+        ),
     ]
 }

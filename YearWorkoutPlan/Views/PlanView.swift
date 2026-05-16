@@ -244,56 +244,130 @@ private struct NutritionTab: View {
 private struct SupplementsTab: View {
     @Environment(AppState.self) private var state
 
-    var body: some View {
-        CardView {
-            ForEach([1, 2, 3], id: \.self) { tier in
-                let tierColor: Color = tier == 1 ? state.season.color : tier == 2 ? AppColor.deload : AppColor.textDimmed
-                let tierLabel = tier == 1 ? "YEAR-ROUND (STRONG EVIDENCE)"
-                              : tier == 2 ? "TEST-DRIVEN"
-                              : "SITUATIONAL"
+    // Bodyweight for live dose scaling — nil until the user has logged at least one entry.
+    private var bwKg: Double? { state.userProfile.bodyweightKg }
 
-                SectionLabel(text: "TIER \(tier) — \(tierLabel)", color: tierColor)
-                    .padding(.top, tier > 1 ? 20 : 0)
+    var body: some View {
+        @Bindable var bindState = state
+
+        // Tier sections: 1 = year-round, 2 = context-dependent, 3 = situational
+        ForEach([1, 2, 3], id: \.self) { tier in
+            let tierColor: Color = tier == 1 ? AppColor.spring
+                                 : tier == 2 ? AppColor.summer
+                                 : AppColor.textDimmed
+            let tierLabel = tier == 1 ? "TIER 1 — YEAR-ROUND (EVIDENCE A)"
+                          : tier == 2 ? "TIER 2 — CONTEXT-DEPENDENT"
+                          : "TIER 3 — SITUATIONAL"
+
+            CardView {
+                SectionLabel(text: tierLabel, color: tierColor)
 
                 ForEach(SupplementList.all.filter { $0.tier == tier }) { supp in
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(supp.name)
-                                .font(.appSubhead)
-                                .foregroundColor(AppColor.textSecondary)
-                            Text(supp.timing)
-                                .font(.monoTiny)
-                                .foregroundColor(AppColor.textDimmed)
-                        }
-                        Spacer()
-                        Text(supp.dose)
-                            .font(.monoSmall)
-                            .foregroundColor(AppColor.textMuted)
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 90, alignment: .trailing)
-                    }
-                    .padding(.vertical, 10)
-                    Divider().background(AppColor.cardBackground2)
+                    SupplementPlanRow(supp: supp, bwKg: bwKg, tierColor: tierColor)
+                        .padding(.vertical, 4)
+                    Divider().background(AppColor.border1)
                 }
             }
+        }
 
-            // Skip callout
+        // Skip callout
+        CardView {
             VStack(alignment: .leading, spacing: 6) {
                 SectionLabel(text: "SKIP THESE", color: AppColor.dangerRed)
                 Text(SupplementList.skipList)
                     .font(.appBody)
                     .foregroundColor(AppColor.textDimmed)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(hex: "#1A0A0A"))
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(hex: "#2D1A1A"), lineWidth: 1)
-            )
-            .padding(.top, 16)
         }
+    }
+}
+
+// MARK: - Supplement Plan Row
+/// Displays full evidence-based detail for a single supplement in PlanView.
+/// The "Add to daily stack" toggle writes to AppState.activeSupplementIDs so
+/// SupplementAdherenceCard only tracks what the user has committed to.
+private struct SupplementPlanRow: View {
+    @Environment(AppState.self) private var state
+    let supp: Supplement
+    let bwKg: Double?
+    let tierColor: Color
+
+    private var isActive: Bool {
+        state.activeSupplementIDs.contains(supp.id)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+
+            // Row 1: Name + tier badge + toggle
+            HStack(alignment: .top, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(supp.name)
+                            .font(.appSubhead)
+                            .foregroundColor(AppColor.textPrimary)
+                        BadgeView(
+                            "T\(supp.tier)",
+                            foreground: tierColor,
+                            background: tierColor.opacity(0.13)
+                        )
+                    }
+
+                    // Dose line: always show base dose; add scaled version when BW is known
+                    if let bw = bwKg, let scaledFn = supp.bwScaledDoseFn {
+                        Text("\(supp.dose)  →  \(scaledFn(bw))")
+                            .font(.monoTiny)
+                            .foregroundColor(tierColor)
+                    } else {
+                        Text(supp.dose)
+                            .font(.monoTiny)
+                            .foregroundColor(AppColor.textMuted)
+                    }
+
+                    Text(supp.timing)
+                        .font(.monoTiny)
+                        .foregroundColor(AppColor.textDimmed)
+                }
+
+                Spacer()
+
+                // "Add to daily stack" toggle
+                Button {
+                    if isActive {
+                        state.activeSupplementIDs.remove(supp.id)
+                    } else {
+                        state.activeSupplementIDs.insert(supp.id)
+                    }
+                } label: {
+                    Image(systemName: isActive ? "checkmark.circle.fill" : "plus.circle")
+                        .font(.system(size: 22, weight: .regular))
+                        .foregroundColor(isActive ? AppColor.spring : AppColor.textFaint)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isActive ? "Remove from daily stack" : "Add to daily stack")
+            }
+
+            // Rationale (why this matters)
+            Text(supp.rationale)
+                .font(.appBody)
+                .italic()
+                .foregroundColor(AppColor.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Evidence grade
+            Text(supp.evidence)
+                .font(.monoTiny)
+                .foregroundColor(AppColor.textFaint)
+
+            // Caution (if any) — red to signal warning
+            if let caution = supp.cautions {
+                Text(caution)
+                    .font(.monoTiny)
+                    .foregroundColor(AppColor.dangerRed)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: isActive)
     }
 }
 

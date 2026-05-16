@@ -252,6 +252,13 @@ final class AppState {
     var supplementAdherence: [SupplementAdherence] = [] {
         didSet { save() }
     }
+
+    /// The set of supplement IDs the user has added to their daily stack.
+    /// Defaults to all Tier 1 IDs so the adherence card is populated on first launch.
+    /// SupplementAdherenceCard shows only these IDs; PlanView lets users toggle membership.
+    var activeSupplementIDs: Set<Int> = Set(SupplementList.all.filter { $0.tier == 1 }.map(\.id)) {
+        didSet { save() }
+    }
     var sessionRPEs: [SessionRPE] = [] {
         didSet { save() }
     }
@@ -511,27 +518,28 @@ final class AppState {
 
     func save() {
         let container = PersistenceContainerV3(
-            currentWeek:          currentWeek,
-            currentDayIndex:      currentDayIndex,
-            whoopToday:           whoopToday,
-            bodyweightLog:        bodyweightLog,
-            workoutLogs:          workoutLogs,
-            prLog:                prLog,
-            swappedExercises:     swappedExercises,
-            userRecipes:          userRecipes,
-            mobilityCompleted:    mobilityCompleted,
-            assessmentHistory:    assessmentHistory,
-            hexagonHistory:       hexagonHistory,
-            bloodworkHistory:     bloodworkHistory,
-            supplementAdherence:  supplementAdherence,
-            sessionRPEs:          sessionRPEs,
-            photoEntries:         photoEntries,
-            moodEntries:          moodEntries,
-            healthSnapshots:      healthSnapshots,
-            userProfile:          userProfile,
-            travelModeUntil:      travelModeUntil,
-            autoregEnabled:       autoregEnabled,
-            onboardingCompleted:  onboardingCompleted
+            currentWeek:           currentWeek,
+            currentDayIndex:       currentDayIndex,
+            whoopToday:            whoopToday,
+            bodyweightLog:         bodyweightLog,
+            workoutLogs:           workoutLogs,
+            prLog:                 prLog,
+            swappedExercises:      swappedExercises,
+            userRecipes:           userRecipes,
+            mobilityCompleted:     mobilityCompleted,
+            assessmentHistory:     assessmentHistory,
+            hexagonHistory:        hexagonHistory,
+            bloodworkHistory:      bloodworkHistory,
+            supplementAdherence:   supplementAdherence,
+            sessionRPEs:           sessionRPEs,
+            photoEntries:          photoEntries,
+            moodEntries:           moodEntries,
+            healthSnapshots:       healthSnapshots,
+            userProfile:           userProfile,
+            travelModeUntil:       travelModeUntil,
+            autoregEnabled:        autoregEnabled,
+            onboardingCompleted:   onboardingCompleted,
+            activeSupplementIDs:   activeSupplementIDs
         )
         if let data = try? JSONEncoder().encode(container) {
             UserDefaults.standard.set(data, forKey: Self.v3Key)
@@ -586,6 +594,7 @@ final class AppState {
         travelModeUntil      = c.travelModeUntil
         autoregEnabled       = c.autoregEnabled
         onboardingCompleted  = c.onboardingCompleted
+        activeSupplementIDs  = c.activeSupplementIDs
         scheduleWeek         = c.currentWeek
     }
 
@@ -655,10 +664,13 @@ final class AppState {
         return nil
     }
 
-    /// Weekly supplement compliance for tier 1–2 supplements.
-    /// Returns a value in [0, 1]: 1.0 = all supplements taken every day this week.
+    /// Weekly supplement compliance for the user's active supplement stack.
+    /// Returns a value in [0, 1]: 1.0 = all active supplements taken every day this week.
     var weeklySupplementCompliance: Double {
-        let tier12 = SupplementList.all.filter { $0.tier <= 2 }
+        // Use the active set rather than a hard-coded tier filter so the compliance
+        // percentage reflects the stack the user has actually committed to.
+        let active = SupplementList.all.filter { activeSupplementIDs.contains($0.id) }
+        let tier12 = active.isEmpty ? SupplementList.all.filter { $0.tier <= 2 } : active
         guard !tier12.isEmpty else { return 0 }
 
         // Build the set of dates for the current calendar week (Mon–today)
@@ -762,6 +774,11 @@ private struct PersistenceContainerV3: Codable {
     var autoregEnabled: Bool
     var onboardingCompleted: Bool
 
+    // --- Wave 3 additions ---
+    /// Encoded as a JSON array of Int; decoded with decodeIfPresent so Wave 2
+    /// blobs (which don't have this key) fall back to the Tier 1 default set.
+    var activeSupplementIDs: Set<Int>
+
     // Custom decode with decodeIfPresent for every v3 field so that a v2 blob
     // accidentally decoded here still produces valid defaults rather than a throw.
     init(from decoder: Decoder) throws {
@@ -788,6 +805,9 @@ private struct PersistenceContainerV3: Codable {
         travelModeUntil     = try? c.decodeIfPresent(Date.self,           forKey: .travelModeUntil)
         autoregEnabled      = (try? c.decode(Bool.self,                   forKey: .autoregEnabled))      ?? true
         onboardingCompleted = (try? c.decode(Bool.self,                   forKey: .onboardingCompleted)) ?? false
+        // Wave 3: default to Tier 1 IDs when decoding a pre-Wave-3 blob
+        let defaultTier1 = Set(SupplementList.all.filter { $0.tier == 1 }.map(\.id))
+        activeSupplementIDs = (try? c.decodeIfPresent(Set<Int>.self, forKey: .activeSupplementIDs)) ?? defaultTier1
     }
 
     // Memberwise init used by AppState.save()
@@ -799,29 +819,31 @@ private struct PersistenceContainerV3: Codable {
         bloodworkHistory: [BloodworkEntry], supplementAdherence: [SupplementAdherence],
         sessionRPEs: [SessionRPE], photoEntries: [PhotoEntry], moodEntries: [MoodEntry],
         healthSnapshots: [HealthSnapshot], userProfile: UserProfile,
-        travelModeUntil: Date?, autoregEnabled: Bool, onboardingCompleted: Bool
+        travelModeUntil: Date?, autoregEnabled: Bool, onboardingCompleted: Bool,
+        activeSupplementIDs: Set<Int>
     ) {
-        self.currentWeek        = currentWeek
-        self.currentDayIndex    = currentDayIndex
-        self.whoopToday         = whoopToday
-        self.bodyweightLog      = bodyweightLog
-        self.workoutLogs        = workoutLogs
-        self.prLog              = prLog
-        self.swappedExercises   = swappedExercises
-        self.userRecipes        = userRecipes
-        self.mobilityCompleted  = mobilityCompleted
-        self.assessmentHistory  = assessmentHistory
-        self.hexagonHistory     = hexagonHistory
-        self.bloodworkHistory   = bloodworkHistory
+        self.currentWeek         = currentWeek
+        self.currentDayIndex     = currentDayIndex
+        self.whoopToday          = whoopToday
+        self.bodyweightLog       = bodyweightLog
+        self.workoutLogs         = workoutLogs
+        self.prLog               = prLog
+        self.swappedExercises    = swappedExercises
+        self.userRecipes         = userRecipes
+        self.mobilityCompleted   = mobilityCompleted
+        self.assessmentHistory   = assessmentHistory
+        self.hexagonHistory      = hexagonHistory
+        self.bloodworkHistory    = bloodworkHistory
         self.supplementAdherence = supplementAdherence
-        self.sessionRPEs        = sessionRPEs
-        self.photoEntries       = photoEntries
-        self.moodEntries        = moodEntries
-        self.healthSnapshots    = healthSnapshots
-        self.userProfile        = userProfile
-        self.travelModeUntil    = travelModeUntil
-        self.autoregEnabled     = autoregEnabled
+        self.sessionRPEs         = sessionRPEs
+        self.photoEntries        = photoEntries
+        self.moodEntries         = moodEntries
+        self.healthSnapshots     = healthSnapshots
+        self.userProfile         = userProfile
+        self.travelModeUntil     = travelModeUntil
+        self.autoregEnabled      = autoregEnabled
         self.onboardingCompleted = onboardingCompleted
+        self.activeSupplementIDs = activeSupplementIDs
     }
 }
 
