@@ -472,9 +472,24 @@ struct AddRecipeView: View {
     @State private var fat = ""
     @State private var ingredients = ""
     @State private var steps = ""
+    /// Multi-select tag set — Wave 4 addition.
+    @State private var selectedTags: Set<RecipeTag> = [.anySeason]
 
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    /// Sensible default tags based on input — pre-selected but overridable.
+    private var suggestedTags: Set<RecipeTag> {
+        var defaults: Set<RecipeTag> = [.anySeason]
+        if let mins = extractPrepMinutes(from: prepTime) {
+            if mins < 5  { defaults.insert(.under5) }
+            if mins < 15 { defaults.insert(.under15) }
+            if mins < 30 { defaults.insert(.under30) }
+            if mins >= 30 { defaults.insert(.over30) }
+        }
+        if let p = Int(protein), p >= 35 { defaults.insert(.eliteProtein) }
+        return defaults
     }
 
     var body: some View {
@@ -496,6 +511,9 @@ struct AddRecipeView: View {
                                 inputField("Carbs",   text: $carbs).frame(maxWidth: .infinity)
                                 inputField("Fat",     text: $fat).frame(maxWidth: .infinity)
                             }
+                        }
+                        fieldGroup("Tags") {
+                            tagPicker
                         }
                         fieldGroup("Ingredients (one per line)") {
                             multilineInput("Chicken breast\nWhite rice\n...", text: $ingredients)
@@ -523,8 +541,50 @@ struct AddRecipeView: View {
                 }
             }
             .preferredColorScheme(.dark)
+            .onAppear {
+                // Seed sensible defaults on first appearance
+                selectedTags = suggestedTags
+            }
         }
     }
+
+    // MARK: - Tag Picker
+
+    /// Scrollable multi-select chip grid for all RecipeTag cases.
+    private var tagPicker: some View {
+        LazyVGrid(
+            columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3),
+            spacing: 6
+        ) {
+            ForEach(RecipeTag.allCases) { tag in
+                let isSelected = selectedTags.contains(tag)
+                Button {
+                    if isSelected {
+                        selectedTags.remove(tag)
+                    } else {
+                        selectedTags.insert(tag)
+                    }
+                } label: {
+                    Text(tag.displayName)
+                        .font(.system(size: 10, weight: .semibold, design: .default))
+                        .lineLimit(1)
+                        .foregroundColor(isSelected ? (isSelected ? .black : tag.color) : AppColor.textDimmed)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .background(isSelected ? tag.color : AppColor.cardBackground2)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(isSelected ? tag.color : AppColor.border2, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+                .animation(.easeInOut(duration: 0.12), value: isSelected)
+            }
+        }
+    }
+
+    // MARK: - Helpers
 
     private func fieldGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -564,6 +624,13 @@ struct AddRecipeView: View {
             }
     }
 
+    /// Extracts an integer minute value from strings like "15 min", "20 minutes", "5".
+    private func extractPrepMinutes(from str: String) -> Int? {
+        let digits = str.components(separatedBy: CharacterSet.decimalDigits.inverted)
+                        .joined()
+        return Int(digits)
+    }
+
     private func saveRecipe() {
         let macros = RecipeMacros(
             calories: Int(calories) ?? 0,
@@ -585,9 +652,8 @@ struct AddRecipeView: View {
             prepTime: prepTime.isEmpty ? "—" : prepTime,
             macros: macros,
             ingredients: ingredientList,
-            steps: stepList
-            // Wave 3 fields default: tags=[], fiber=0, omega3=0, polyphenolNote=nil, whyElite=""
-            // Tag editing for user recipes is a Wave 4 TODO.
+            steps: stepList,
+            tags: Array(selectedTags)
         )
         onSave(recipe)
         dismiss()

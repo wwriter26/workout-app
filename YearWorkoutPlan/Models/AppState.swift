@@ -105,8 +105,15 @@ final class AppState {
             ?? Session(dayKey: todayDayKey, label: "Rest", cnsLoad: .rest, isCardio: false, exercises: [])
     }
 
-    /// Applies Whoop adjustment: red → Z2 stub; yellow → strips whoopGreen-only exercises
+    /// Applies Whoop adjustment then travel-mode swaps.
+    ///
+    /// Pipeline:
+    ///   1. Whoop red  → replace entire session with Z2 stub
+    ///   2. Whoop yellow → strip whoopGreen-only exercises
+    ///   3. Travel mode active → swap equipment-heavy exercises to bodyweight variants
     var adjustedSession: Session {
+        // Step 1 & 2: Whoop adjustment
+        let whoopAdjusted: Session
         switch whoopToday {
         case .red:
             return Session(
@@ -121,7 +128,7 @@ final class AppState {
             )
         case .yellow:
             let filtered = todaySession.exercises.filter { !$0.whoopGreen }
-            return Session(
+            whoopAdjusted = Session(
                 dayKey: todaySession.dayKey,
                 label: todaySession.label,
                 cnsLoad: todaySession.cnsLoad,
@@ -129,7 +136,68 @@ final class AppState {
                 exercises: filtered
             )
         default:
-            return todaySession
+            whoopAdjusted = todaySession
+        }
+
+        // Step 3: Travel mode — swap equipment-heavy exercises when travel is active
+        guard let travelUntil = travelModeUntil, travelUntil > Date() else {
+            return whoopAdjusted
+        }
+        let travelExercises = whoopAdjusted.exercises.map { Self.travelSwap($0) }
+        return Session(
+            dayKey: whoopAdjusted.dayKey,
+            label: whoopAdjusted.label,
+            cnsLoad: whoopAdjusted.cnsLoad,
+            isCardio: whoopAdjusted.isCardio,
+            exercises: travelExercises
+        )
+    }
+
+    /// Heuristic travel swap: if the exercise name contains equipment keywords that
+    /// aren't available in a hotel gym, look for a bodyweight alternative in
+    /// ExerciseAlternatives. If one is found, return a renamed Exercise; otherwise
+    /// append "(travel: try bodyweight)" to the name so the user knows to substitute.
+    private static func travelSwap(_ exercise: Exercise) -> Exercise {
+        let name = exercise.name.lowercased()
+        let equipmentKeywords = ["barbell", "machine", "cable", "smith", "leg press",
+                                 "hack squat", "leg curl"]
+        guard equipmentKeywords.contains(where: { name.contains($0) }) else {
+            return exercise  // no swap needed
+        }
+
+        // Look for a bodyweight-friendly alternative in the same muscle group
+        let group = ExerciseAlternatives.classify(exercise.name)
+        let bwAlternatives = (ExerciseAlternatives.library[group] ?? []).filter { alt in
+            let n = alt.name.lowercased()
+            return n.contains("bodyweight") || n.contains("bw") ||
+                   n.contains("push-up") || n.contains("pull-up") ||
+                   n.contains("chin-up") || n.contains("dip") ||
+                   n.contains("lunge") || n.contains("squat") && !n.contains("barbell") &&
+                   !n.contains("smith") && !n.contains("hack") && !n.contains("pendulum")
+        }
+
+        if let best = bwAlternatives.first {
+            // Return the original Exercise struct with the swapped name
+            return Exercise(
+                name: best.name,
+                sets: exercise.sets,
+                reps: exercise.reps,
+                load: "Bodyweight",
+                rir: exercise.rir,
+                rest: exercise.rest,
+                whoopGreen: exercise.whoopGreen
+            )
+        } else {
+            // No BW alternative found — annotate the name
+            return Exercise(
+                name: "\(exercise.name) (travel: try bodyweight)",
+                sets: exercise.sets,
+                reps: exercise.reps,
+                load: exercise.load,
+                rir: exercise.rir,
+                rest: exercise.rest,
+                whoopGreen: exercise.whoopGreen
+            )
         }
     }
 
@@ -286,6 +354,34 @@ final class AppState {
         didSet { save() }
     }
 
+    // MARK: - Wave 4 Persisted Properties
+
+    /// The ID of the currently selected limiting-joint focus track (nil = none selected).
+    var activeLimitingJointTrackID: Int? = nil {
+        didSet { save() }
+    }
+
+    // --- Notification preferences ---
+    var notificationsEnabled: Bool = false {
+        didSet { save() }
+    }
+    var workoutTimeHour: Int = 17 {
+        didSet { save() }
+    }
+    var workoutTimeMinute: Int = 0 {
+        didSet { save() }
+    }
+    /// Bitmask Mon–Sun: bit 0 = Monday, bit 6 = Sunday. Default all 7 days active.
+    var workoutDaysMask: Int = 0b1111111 {
+        didSet { save() }
+    }
+    var supplementRemindersEnabled: Bool = false {
+        didSet { save() }
+    }
+    var weeklySummaryEnabled: Bool = true {
+        didSet { save() }
+    }
+
     // MARK: - Computed Helpers (v3)
 
     var latestSnapshot: HealthSnapshot? { healthSnapshots.last }
@@ -362,7 +458,13 @@ final class AppState {
     func logMood(mood: Int, energy: Int, sleepQuality: Int) {
         let today = Self.sharedDateString(from: Date())
         moodEntries.removeAll { $0.date == today }
-        moodEntries.append(MoodEntry(date: today, mood: mood, energy: energy, sleepQuality: sleepQuality))
+        moodEntries.append(MoodEntry(
+            date: today,
+            mood: mood,
+            energy: energy,
+            sleepQuality: sleepQuality,
+            loggedAtEpoch: Date().timeIntervalSince1970  // Wave 4: capture exact log time
+        ))
     }
 
     func logSessionRPE(rpe: Int, durationMin: Int) {
@@ -518,28 +620,35 @@ final class AppState {
 
     func save() {
         let container = PersistenceContainerV3(
-            currentWeek:           currentWeek,
-            currentDayIndex:       currentDayIndex,
-            whoopToday:            whoopToday,
-            bodyweightLog:         bodyweightLog,
-            workoutLogs:           workoutLogs,
-            prLog:                 prLog,
-            swappedExercises:      swappedExercises,
-            userRecipes:           userRecipes,
-            mobilityCompleted:     mobilityCompleted,
-            assessmentHistory:     assessmentHistory,
-            hexagonHistory:        hexagonHistory,
-            bloodworkHistory:      bloodworkHistory,
-            supplementAdherence:   supplementAdherence,
-            sessionRPEs:           sessionRPEs,
-            photoEntries:          photoEntries,
-            moodEntries:           moodEntries,
-            healthSnapshots:       healthSnapshots,
-            userProfile:           userProfile,
-            travelModeUntil:       travelModeUntil,
-            autoregEnabled:        autoregEnabled,
-            onboardingCompleted:   onboardingCompleted,
-            activeSupplementIDs:   activeSupplementIDs
+            currentWeek:                 currentWeek,
+            currentDayIndex:             currentDayIndex,
+            whoopToday:                  whoopToday,
+            bodyweightLog:               bodyweightLog,
+            workoutLogs:                 workoutLogs,
+            prLog:                       prLog,
+            swappedExercises:            swappedExercises,
+            userRecipes:                 userRecipes,
+            mobilityCompleted:           mobilityCompleted,
+            assessmentHistory:           assessmentHistory,
+            hexagonHistory:              hexagonHistory,
+            bloodworkHistory:            bloodworkHistory,
+            supplementAdherence:         supplementAdherence,
+            sessionRPEs:                 sessionRPEs,
+            photoEntries:                photoEntries,
+            moodEntries:                 moodEntries,
+            healthSnapshots:             healthSnapshots,
+            userProfile:                 userProfile,
+            travelModeUntil:             travelModeUntil,
+            autoregEnabled:              autoregEnabled,
+            onboardingCompleted:         onboardingCompleted,
+            activeSupplementIDs:         activeSupplementIDs,
+            activeLimitingJointTrackID:  activeLimitingJointTrackID,
+            notificationsEnabled:        notificationsEnabled,
+            workoutTimeHour:             workoutTimeHour,
+            workoutTimeMinute:           workoutTimeMinute,
+            workoutDaysMask:             workoutDaysMask,
+            supplementRemindersEnabled:  supplementRemindersEnabled,
+            weeklySummaryEnabled:        weeklySummaryEnabled
         )
         if let data = try? JSONEncoder().encode(container) {
             UserDefaults.standard.set(data, forKey: Self.v3Key)
@@ -573,29 +682,37 @@ final class AppState {
     }
 
     private func applyV3Container(_ c: PersistenceContainerV3) {
-        currentWeek          = c.currentWeek
-        currentDayIndex      = c.currentDayIndex
-        whoopToday           = c.whoopToday
-        bodyweightLog        = c.bodyweightLog
-        workoutLogs          = c.workoutLogs
-        prLog                = c.prLog
-        swappedExercises     = c.swappedExercises
-        userRecipes          = c.userRecipes
-        mobilityCompleted    = c.mobilityCompleted
-        assessmentHistory    = c.assessmentHistory
-        hexagonHistory       = c.hexagonHistory
-        bloodworkHistory     = c.bloodworkHistory
-        supplementAdherence  = c.supplementAdherence
-        sessionRPEs          = c.sessionRPEs
-        photoEntries         = c.photoEntries
-        moodEntries          = c.moodEntries
-        healthSnapshots      = c.healthSnapshots
-        userProfile          = c.userProfile
-        travelModeUntil      = c.travelModeUntil
-        autoregEnabled       = c.autoregEnabled
-        onboardingCompleted  = c.onboardingCompleted
-        activeSupplementIDs  = c.activeSupplementIDs
-        scheduleWeek         = c.currentWeek
+        currentWeek                = c.currentWeek
+        currentDayIndex            = c.currentDayIndex
+        whoopToday                 = c.whoopToday
+        bodyweightLog              = c.bodyweightLog
+        workoutLogs                = c.workoutLogs
+        prLog                      = c.prLog
+        swappedExercises           = c.swappedExercises
+        userRecipes                = c.userRecipes
+        mobilityCompleted          = c.mobilityCompleted
+        assessmentHistory          = c.assessmentHistory
+        hexagonHistory             = c.hexagonHistory
+        bloodworkHistory           = c.bloodworkHistory
+        supplementAdherence        = c.supplementAdherence
+        sessionRPEs                = c.sessionRPEs
+        photoEntries               = c.photoEntries
+        moodEntries                = c.moodEntries
+        healthSnapshots            = c.healthSnapshots
+        userProfile                = c.userProfile
+        travelModeUntil            = c.travelModeUntil
+        autoregEnabled             = c.autoregEnabled
+        onboardingCompleted        = c.onboardingCompleted
+        activeSupplementIDs        = c.activeSupplementIDs
+        scheduleWeek               = c.currentWeek
+        // Wave 4 fields (default gracefully when loading a pre-Wave-4 blob)
+        activeLimitingJointTrackID = c.activeLimitingJointTrackID
+        notificationsEnabled       = c.notificationsEnabled
+        workoutTimeHour            = c.workoutTimeHour
+        workoutTimeMinute          = c.workoutTimeMinute
+        workoutDaysMask            = c.workoutDaysMask
+        supplementRemindersEnabled = c.supplementRemindersEnabled
+        weeklySummaryEnabled       = c.weeklySummaryEnabled
     }
 
     private func applyV2Container(_ c: PersistenceContainer) {
@@ -779,8 +896,17 @@ private struct PersistenceContainerV3: Codable {
     /// blobs (which don't have this key) fall back to the Tier 1 default set.
     var activeSupplementIDs: Set<Int>
 
-    // Custom decode with decodeIfPresent for every v3 field so that a v2 blob
-    // accidentally decoded here still produces valid defaults rather than a throw.
+    // --- Wave 4 additions ---
+    var activeLimitingJointTrackID: Int?
+    var notificationsEnabled: Bool
+    var workoutTimeHour: Int
+    var workoutTimeMinute: Int
+    var workoutDaysMask: Int
+    var supplementRemindersEnabled: Bool
+    var weeklySummaryEnabled: Bool
+
+    // Custom decode with decodeIfPresent for every v3+ field so that a v2/v3 blob
+    // decoded here still produces valid defaults rather than a throw.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         currentWeek       = try c.decode(Int.self,                forKey: .currentWeek)
@@ -808,6 +934,16 @@ private struct PersistenceContainerV3: Codable {
         // Wave 3: default to Tier 1 IDs when decoding a pre-Wave-3 blob
         let defaultTier1 = Set(SupplementList.all.filter { $0.tier == 1 }.map(\.id))
         activeSupplementIDs = (try? c.decodeIfPresent(Set<Int>.self, forKey: .activeSupplementIDs)) ?? defaultTier1
+
+        // Wave 4: all new fields use decodeIfPresent with sensible defaults so
+        // existing persisted blobs decode without throwing.
+        activeLimitingJointTrackID = try? c.decodeIfPresent(Int.self, forKey: .activeLimitingJointTrackID)
+        notificationsEnabled       = (try? c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled))       ?? false
+        workoutTimeHour            = (try? c.decodeIfPresent(Int.self,  forKey: .workoutTimeHour))            ?? 17
+        workoutTimeMinute          = (try? c.decodeIfPresent(Int.self,  forKey: .workoutTimeMinute))          ?? 0
+        workoutDaysMask            = (try? c.decodeIfPresent(Int.self,  forKey: .workoutDaysMask))            ?? 0b1111111
+        supplementRemindersEnabled = (try? c.decodeIfPresent(Bool.self, forKey: .supplementRemindersEnabled)) ?? false
+        weeklySummaryEnabled       = (try? c.decodeIfPresent(Bool.self, forKey: .weeklySummaryEnabled))       ?? true
     }
 
     // Memberwise init used by AppState.save()
@@ -820,30 +956,45 @@ private struct PersistenceContainerV3: Codable {
         sessionRPEs: [SessionRPE], photoEntries: [PhotoEntry], moodEntries: [MoodEntry],
         healthSnapshots: [HealthSnapshot], userProfile: UserProfile,
         travelModeUntil: Date?, autoregEnabled: Bool, onboardingCompleted: Bool,
-        activeSupplementIDs: Set<Int>
+        activeSupplementIDs: Set<Int>,
+        // Wave 4
+        activeLimitingJointTrackID: Int?,
+        notificationsEnabled: Bool,
+        workoutTimeHour: Int,
+        workoutTimeMinute: Int,
+        workoutDaysMask: Int,
+        supplementRemindersEnabled: Bool,
+        weeklySummaryEnabled: Bool
     ) {
-        self.currentWeek         = currentWeek
-        self.currentDayIndex     = currentDayIndex
-        self.whoopToday          = whoopToday
-        self.bodyweightLog       = bodyweightLog
-        self.workoutLogs         = workoutLogs
-        self.prLog               = prLog
-        self.swappedExercises    = swappedExercises
-        self.userRecipes         = userRecipes
-        self.mobilityCompleted   = mobilityCompleted
-        self.assessmentHistory   = assessmentHistory
-        self.hexagonHistory      = hexagonHistory
-        self.bloodworkHistory    = bloodworkHistory
-        self.supplementAdherence = supplementAdherence
-        self.sessionRPEs         = sessionRPEs
-        self.photoEntries        = photoEntries
-        self.moodEntries         = moodEntries
-        self.healthSnapshots     = healthSnapshots
-        self.userProfile         = userProfile
-        self.travelModeUntil     = travelModeUntil
-        self.autoregEnabled      = autoregEnabled
-        self.onboardingCompleted = onboardingCompleted
-        self.activeSupplementIDs = activeSupplementIDs
+        self.currentWeek               = currentWeek
+        self.currentDayIndex           = currentDayIndex
+        self.whoopToday                = whoopToday
+        self.bodyweightLog             = bodyweightLog
+        self.workoutLogs               = workoutLogs
+        self.prLog                     = prLog
+        self.swappedExercises          = swappedExercises
+        self.userRecipes               = userRecipes
+        self.mobilityCompleted         = mobilityCompleted
+        self.assessmentHistory         = assessmentHistory
+        self.hexagonHistory            = hexagonHistory
+        self.bloodworkHistory          = bloodworkHistory
+        self.supplementAdherence       = supplementAdherence
+        self.sessionRPEs               = sessionRPEs
+        self.photoEntries              = photoEntries
+        self.moodEntries               = moodEntries
+        self.healthSnapshots           = healthSnapshots
+        self.userProfile               = userProfile
+        self.travelModeUntil           = travelModeUntil
+        self.autoregEnabled            = autoregEnabled
+        self.onboardingCompleted       = onboardingCompleted
+        self.activeSupplementIDs       = activeSupplementIDs
+        self.activeLimitingJointTrackID  = activeLimitingJointTrackID
+        self.notificationsEnabled        = notificationsEnabled
+        self.workoutTimeHour             = workoutTimeHour
+        self.workoutTimeMinute           = workoutTimeMinute
+        self.workoutDaysMask             = workoutDaysMask
+        self.supplementRemindersEnabled  = supplementRemindersEnabled
+        self.weeklySummaryEnabled        = weeklySummaryEnabled
     }
 }
 

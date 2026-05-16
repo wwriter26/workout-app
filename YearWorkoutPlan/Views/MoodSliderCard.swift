@@ -102,9 +102,8 @@ struct MoodSliderCard: View {
     private var saveButton: some View {
         HStack {
             if let entry = todayEntry {
-                // Show logged time
-                let loggedTime = formattedTime(entry.date)
-                Text("Logged · \(loggedTime)")
+                // Show the actual time the entry was saved (from loggedAtEpoch)
+                Text("Logged · \(formattedTime(entry: entry))")
                     .font(.monoTiny)
                     .foregroundColor(AppColor.textDimmed)
                 Spacer()
@@ -155,11 +154,14 @@ struct MoodSliderCard: View {
 
     private func energyColor(_ v: Int) -> Color { moodColor(v) }
 
-    /// Returns the current time as "HH:MM" (the date key is from today anyway).
-    private func formattedTime(_ dateStr: String) -> String {
+    /// Formats the actual logged-at time from the MoodEntry's `loggedAtEpoch`.
+    /// Falls back to the current time for entries saved before Wave 4 (epoch == 0).
+    private func formattedTime(entry: MoodEntry) -> String {
+        let epoch = entry.loggedAtEpoch
+        let date = epoch > 0 ? Date(timeIntervalSince1970: epoch) : Date()
         let f = DateFormatter()
-        f.timeStyle = .short
-        return f.string(from: Date())
+        f.dateFormat = "HH:mm"
+        return f.string(from: date)
     }
 }
 

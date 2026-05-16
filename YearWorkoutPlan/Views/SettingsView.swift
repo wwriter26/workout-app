@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Settings View
 /// User profile, plate configuration, HealthKit controls, autoregulation toggle,
-/// and travel mode. Presented as a sheet from the top bar gear icon.
+/// travel mode, and notification preferences.
 struct SettingsView: View {
     @Environment(AppState.self) private var state
     @Environment(\.dismiss) private var dismiss
@@ -19,8 +19,10 @@ struct SettingsView: View {
     @State private var healthRefreshMessage: String? = nil
     @State private var isRefreshing: Bool = false
     @State private var showBloodwork: Bool = false
+    @State private var notifStatusMessage: String? = nil
 
     private let standardPlates: [Double] = [45, 35, 25, 10, 5, 2.5, 1.25]
+    private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
 
     var body: some View {
         NavigationStack {
@@ -31,6 +33,7 @@ struct SettingsView: View {
                         profileSection
                         plateSection
                         healthKitSection
+                        notificationsSection
                         autoregSection
                         travelModeSection
                         bloodworkSection
@@ -211,6 +214,150 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Notifications Section
+
+    private var notificationsSection: some View {
+        @Bindable var bindState = state
+        return CardView {
+            SectionLabel(text: "Notifications")
+                .padding(.bottom, 8)
+
+            // Enable / disable all notifications
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Enable notifications")
+                        .font(.appBody)
+                        .foregroundColor(AppColor.textSecondary)
+                    Text("Pre-workout reminders, weekly summary, supplement timing.")
+                        .font(.appSmall)
+                        .foregroundColor(AppColor.textDimmed)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Toggle("", isOn: $bindState.notificationsEnabled)
+                    .tint(state.season.color)
+                    .labelsHidden()
+                    .onChange(of: state.notificationsEnabled) { _, enabled in
+                        if enabled {
+                            Task {
+                                do {
+                                    let granted = try await NotificationManager.shared.requestAuthorization()
+                                    if !granted {
+                                        // Revert — user denied
+                                        state.notificationsEnabled = false
+                                        notifStatusMessage = "Permission denied. Enable in iOS Settings > Notifications."
+                                    } else {
+                                        await rescheduleAll()
+                                        notifStatusMessage = "Notifications scheduled."
+                                    }
+                                } catch {
+                                    state.notificationsEnabled = false
+                                    notifStatusMessage = "Could not request permission."
+                                }
+                            }
+                        } else {
+                            Task { await NotificationManager.shared.cancelAll() }
+                            notifStatusMessage = "All notifications cancelled."
+                        }
+                    }
+            }
+
+            if state.notificationsEnabled {
+                Divider().background(AppColor.border1).padding(.vertical, 8)
+
+                // Workout time picker
+                SettingsRow(label: "Workout time") {
+                    HStack(spacing: 4) {
+                        Stepper("", value: $bindState.workoutTimeHour, in: 4...23)
+                            .labelsHidden()
+                            .frame(width: 80)
+                        Text(String(format: "%02d:00", state.workoutTimeHour))
+                            .font(.monoSmall)
+                            .foregroundColor(AppColor.textPrimary)
+                    }
+                }
+
+                Divider().background(AppColor.border1).padding(.vertical, 4)
+
+                // Workout day chips (Mon–Sun)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Active days")
+                        .font(.appSmall)
+                        .foregroundColor(AppColor.textMuted)
+                    HStack(spacing: 4) {
+                        ForEach(0..<7) { idx in
+                            let bit = 1 << idx
+                            let isOn = (state.workoutDaysMask & bit) != 0
+                            Button {
+                                state.workoutDaysMask ^= bit   // toggle the bit
+                            } label: {
+                                Text(dayLabels[idx])
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(isOn ? .black : AppColor.textDimmed)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 7)
+                                    .background(isOn ? state.season.color : AppColor.cardBackground2)
+                                    .cornerRadius(6)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(isOn ? state.season.color : AppColor.border2, lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .animation(.easeInOut(duration: 0.15), value: isOn)
+                        }
+                    }
+                }
+
+                Divider().background(AppColor.border1).padding(.vertical, 4)
+
+                // Weekly summary toggle
+                HStack {
+                    Text("Weekly summary (Sun 19:00)")
+                        .font(.appBody)
+                        .foregroundColor(AppColor.textSecondary)
+                    Spacer()
+                    Toggle("", isOn: $bindState.weeklySummaryEnabled)
+                        .tint(state.season.color)
+                        .labelsHidden()
+                }
+
+                Divider().background(AppColor.border1).padding(.vertical, 4)
+
+                // Supplement reminders toggle
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Supplement reminders")
+                            .font(.appBody)
+                            .foregroundColor(AppColor.textSecondary)
+                        Text("Uses your active supplement stack.")
+                            .font(.appSmall)
+                            .foregroundColor(AppColor.textDimmed)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $bindState.supplementRemindersEnabled)
+                        .tint(state.season.color)
+                        .labelsHidden()
+                }
+
+                Divider().background(AppColor.border1).padding(.vertical, 8)
+
+                // Reschedule all button
+                OutlineButton(title: "RESCHEDULE ALL NOW") {
+                    Task { await rescheduleAll(); notifStatusMessage = "All notifications rescheduled." }
+                }
+            }
+
+            if let msg = notifStatusMessage {
+                Text(msg)
+                    .font(.monoTiny)
+                    .foregroundColor(AppColor.textDimmed)
+                    .padding(.top, 4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
     // MARK: - Autoregulation Section
 
     private var autoregSection: some View {
@@ -328,6 +475,42 @@ struct SettingsView: View {
                 }
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Notification Scheduling
+
+    /// Cancels all pending notifications then re-schedules based on current prefs.
+    private func rescheduleAll() async {
+        guard state.notificationsEnabled else { return }
+        await NotificationManager.shared.cancelAll()
+
+        // Convert workoutDaysMask (bit 0 = Monday) to Calendar weekday integers
+        // (Calendar: 1 = Sunday, 2 = Monday … 7 = Saturday)
+        var weekdays: Set<Int> = []
+        for bit in 0..<7 {
+            if (state.workoutDaysMask & (1 << bit)) != 0 {
+                // bit 0 = Monday → weekday 2; bit 6 = Sunday → weekday 1
+                let calWeekday = bit == 6 ? 1 : bit + 2
+                weekdays.insert(calWeekday)
+            }
+        }
+        await NotificationManager.shared.schedulePreWorkoutReminder(
+            at: state.workoutTimeHour,
+            minute: state.workoutTimeMinute,
+            weekdays: weekdays
+        )
+
+        if state.weeklySummaryEnabled {
+            await NotificationManager.shared.scheduleWeeklySummary()
+        }
+
+        if state.supplementRemindersEnabled {
+            let active = SupplementList.all.filter { state.activeSupplementIDs.contains($0.id) }
+            await NotificationManager.shared.scheduleSupplementReminders(
+                supplements: active,
+                userWorkoutHour: state.workoutTimeHour
+            )
         }
     }
 

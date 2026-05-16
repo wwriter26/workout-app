@@ -9,6 +9,7 @@ struct MobilitySectionView: View {
     var body: some View {
         VStack(spacing: 10) {
             dailyCheckOffCard
+            limitingJointTrackCard
             dailyRoutineCard
             preActivationCard
             cooldownCard
@@ -53,6 +54,40 @@ struct MobilitySectionView: View {
                                     : "Mark mobility complete")
             }
         }
+    }
+
+    // MARK: - Limiting Joint Track Card
+
+    private var limitingJointTrackCard: some View {
+        NavigationLink(destination: LimitingJointTrackView().environment(state)) {
+            CardView {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        SectionLabel(text: "Limiting Joint Track")
+                        if let activeID = state.activeLimitingJointTrackID,
+                           let track = MobilityCatalog.limitingJointTracks.first(where: { $0.id == activeID }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(state.season.color)
+                                Text(track.name)
+                                    .font(.appBody)
+                                    .foregroundColor(state.season.color)
+                            }
+                        } else {
+                            Text("No track selected — tap to choose")
+                                .font(.appBody)
+                                .foregroundColor(AppColor.textDimmed)
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(AppColor.textFaint)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Daily 10-Minute Routine

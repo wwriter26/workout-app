@@ -4,6 +4,9 @@ import SwiftUI
 struct TodayView: View {
     @Environment(AppState.self) private var state
     @State private var swapTarget: SwapTarget? = nil
+    @State private var showMissedDay = false
+    /// True when the user chose "Combine with Next" in MissedDayDialog.
+    @State private var showCombinedBanner = false
 
     var body: some View {
         @Bindable var bindState = state
@@ -16,6 +19,12 @@ struct TodayView: View {
                 SupplementAdherenceCard()
                 MoodSliderCard()
                 bodyweightCard
+                // Interference warning: shown between bodyweight and session cards
+                InterferenceWarningBanner()
+                // Combined-session banner (set when user picks "Combine" in MissedDayDialog)
+                if showCombinedBanner {
+                    combinedSessionBanner
+                }
                 sessionCard
                 weekAdjusterCard
                 mobilityCard
@@ -37,6 +46,50 @@ struct TodayView: View {
                            newName: newName)
             }
         }
+        .sheet(isPresented: $showMissedDay) {
+            MissedDayDialog(onDismiss: {
+                showMissedDay = false
+                // Check if the user chose "Combine with Next"
+                let key = "missedDayCombined.\(AppState.sharedDateString(from: Date()))"
+                showCombinedBanner = UserDefaults.standard.bool(forKey: key)
+            })
+            .environment(state)
+        }
+        .onAppear {
+            // Trigger missed-day dialog once per calendar day
+            if MissedDayDialog.shouldShow(state: state) {
+                showMissedDay = true
+            }
+            // Restore combined banner if set earlier in this session
+            let key = "missedDayCombined.\(AppState.sharedDateString(from: Date()))"
+            showCombinedBanner = UserDefaults.standard.bool(forKey: key)
+        }
+    }
+
+    // MARK: - Combined Session Banner
+
+    private var combinedSessionBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "text.badge.plus")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(AppColor.infoBlue)
+            Text("Combined session — yesterday's lifts merged in.")
+                .font(.appSmall)
+                .foregroundColor(AppColor.textSecondary)
+            Spacer()
+            Button {
+                showCombinedBanner = false
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11))
+                    .foregroundColor(AppColor.textFaint)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(AppColor.infoBlue.opacity(0.1))
+        .cornerRadius(8)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppColor.infoBlue.opacity(0.3), lineWidth: 1))
     }
 
     // MARK: - Header Card

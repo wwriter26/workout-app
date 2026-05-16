@@ -93,6 +93,32 @@ struct MoodEntry: Codable, Identifiable {
     var mood: Int                         // 1–10
     var energy: Int                       // 1–10
     var sleepQuality: Int                 // 1–5
+    /// Unix timestamp of when this entry was saved. Added in Wave 4.
+    /// Backward-compat: pre-Wave-4 blobs decode to 0 via the custom init below.
+    var loggedAtEpoch: TimeInterval = 0
+
+    // Custom decoder so pre-Wave-4 blobs (which lack loggedAtEpoch) decode cleanly.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id           = try c.decode(UUID.self,   forKey: .id)
+        date         = try c.decode(String.self, forKey: .date)
+        mood         = try c.decode(Int.self,    forKey: .mood)
+        energy       = try c.decode(Int.self,    forKey: .energy)
+        sleepQuality = try c.decode(Int.self,    forKey: .sleepQuality)
+        // Defaults to 0 for entries saved before Wave 4
+        loggedAtEpoch = (try? c.decodeIfPresent(TimeInterval.self, forKey: .loggedAtEpoch)) ?? 0
+    }
+
+    // Memberwise init used internally when creating new entries
+    init(id: UUID = UUID(), date: String, mood: Int, energy: Int, sleepQuality: Int,
+         loggedAtEpoch: TimeInterval = Date().timeIntervalSince1970) {
+        self.id = id
+        self.date = date
+        self.mood = mood
+        self.energy = energy
+        self.sleepQuality = sleepQuality
+        self.loggedAtEpoch = loggedAtEpoch
+    }
 }
 
 // MARK: - Health Snapshot

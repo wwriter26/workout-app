@@ -45,6 +45,12 @@
 		CC2B000000000003A /* HexagonStatsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000003B /* HexagonStatsCard.swift */; };
 		CC2B000000000004A /* AssessmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000004B /* AssessmentView.swift */; };
 		CC2B000000000005A /* BloodworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2B000000000005B /* BloodworkView.swift */; };
+		W401000000000001A /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = W401000000000001B /* NotificationManager.swift */; };
+		W401000000000002A /* PhotoManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = W401000000000002B /* PhotoManager.swift */; };
+		W401000000000003A /* ProgressPhotosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = W401000000000003B /* ProgressPhotosView.swift */; };
+		W401000000000004A /* LimitingJointTrackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = W401000000000004B /* LimitingJointTrackView.swift */; };
+		W401000000000005A /* InterferenceWarningBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = W401000000000005B /* InterferenceWarningBanner.swift */; };
+		W401000000000006A /* MissedDayDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = W401000000000006B /* MissedDayDialog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +93,12 @@
 		CC2B000000000003B /* HexagonStatsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexagonStatsCard.swift; sourceTree = "<group>"; };
 		CC2B000000000004B /* AssessmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentView.swift; sourceTree = "<group>"; };
 		CC2B000000000005B /* BloodworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloodworkView.swift; sourceTree = "<group>"; };
+		W401000000000001B /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		W401000000000002B /* PhotoManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoManager.swift; sourceTree = "<group>"; };
+		W401000000000003B /* ProgressPhotosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressPhotosView.swift; sourceTree = "<group>"; };
+		W401000000000004B /* LimitingJointTrackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitingJointTrackView.swift; sourceTree = "<group>"; };
+		W401000000000005B /* InterferenceWarningBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterferenceWarningBanner.swift; sourceTree = "<group>"; };
+		W401000000000006B /* MissedDayDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissedDayDialog.swift; sourceTree = "<group>"; };
 		C001000000000001 /* YearWorkoutPlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YearWorkoutPlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -140,6 +152,8 @@
 			children = (
 				BB000000000000003A /* HealthKitManager.swift */,
 				BB000000000000004B /* RestTimer.swift */,
+				W401000000000001B /* NotificationManager.swift */,
+				W401000000000002B /* PhotoManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -161,6 +175,9 @@
 				CC2B000000000003B /* HexagonStatsCard.swift */,
 				CC2B000000000004B /* AssessmentView.swift */,
 				CC2B000000000005B /* BloodworkView.swift */,
+				W401000000000003B /* ProgressPhotosView.swift */,
+				W401000000000004B /* LimitingJointTrackView.swift */,
+				W401000000000006B /* MissedDayDialog.swift */,
 				E001000000000005 /* Components */,
 			);
 			path = Views;
@@ -183,6 +200,7 @@
 				BB000000000000007A /* SetLogRow.swift */,
 				BB000000000000008A /* RecoveryBanner.swift */,
 				CC2B000000000002B /* HexagonRadarView.swift */,
+				W401000000000005B /* InterferenceWarningBanner.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -309,6 +327,12 @@
 				CC2B000000000003A /* HexagonStatsCard.swift in Sources */,
 				CC2B000000000004A /* AssessmentView.swift in Sources */,
 				CC2B000000000005A /* BloodworkView.swift in Sources */,
+				W401000000000001A /* NotificationManager.swift in Sources */,
+				W401000000000002A /* PhotoManager.swift in Sources */,
+				W401000000000003A /* ProgressPhotosView.swift in Sources */,
+				W401000000000004A /* LimitingJointTrackView.swift in Sources */,
+				W401000000000005A /* InterferenceWarningBanner.swift in Sources */,
+				W401000000000006A /* MissedDayDialog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
