@@ -30,6 +30,7 @@ struct SettingsView: View {
                 AppColor.appBackground.ignoresSafeArea()
                 ScrollView {
                     VStack(spacing: 12) {
+                        programStartSection
                         profileSection
                         plateSection
                         healthKitSection
@@ -59,6 +60,119 @@ struct SettingsView: View {
             .preferredColorScheme(.dark)
         }
         .onAppear { loadFromState() }
+    }
+
+    // MARK: - Program Start Section
+
+    /// Calendar anchoring: the date that corresponds to "Day 1 / Week 1 Monday".
+    /// Letting the user pick this lets a mid-Spring install land in mid-Spring
+    /// rather than starting at Week 1 of the program in May.
+    private var programStartSection: some View {
+        @Bindable var bindState = state
+
+        return CardView {
+            SectionLabel(text: "Program Start")
+                .padding(.bottom, 8)
+
+            // Day counter + current week summary
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(state.dayNumber + 1)")
+                        .font(.monoBig)
+                        .foregroundColor(state.season.color)
+                    Text("DAY OF PROGRAM")
+                        .font(.monoTiny)
+                        .foregroundColor(AppColor.textFaint)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("WK \(state.currentWeek)")
+                        .font(.monoBig)
+                        .foregroundColor(AppColor.textPrimary)
+                    Text(state.season.name.uppercased())
+                        .font(.monoTiny)
+                        .foregroundColor(AppColor.textFaint)
+                }
+                Spacer()
+            }
+            .padding(.bottom, 8)
+
+            Divider().background(AppColor.border1)
+
+            // Date picker
+            HStack {
+                Text("Start date")
+                    .font(.appBody)
+                    .foregroundColor(AppColor.textSecondary)
+                Spacer()
+                DatePicker("", selection: $bindState.programStartDate,
+                           in: ...Date(), displayedComponents: .date)
+                    .labelsHidden()
+                    .colorScheme(.dark)
+            }
+            .padding(.vertical, 8)
+
+            Divider().background(AppColor.border1)
+
+            // Auto-sync toggle
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Auto-sync to calendar")
+                        .font(.appBody)
+                        .foregroundColor(AppColor.textSecondary)
+                    Text("Week advances automatically each Monday")
+                        .font(.monoTiny)
+                        .foregroundColor(AppColor.textFaint)
+                }
+                Spacer()
+                Toggle("", isOn: $bindState.autoSyncWeekToCalendar)
+                    .labelsHidden()
+                    .tint(state.season.color)
+                    .onChange(of: bindState.autoSyncWeekToCalendar) { _, on in
+                        if on { state.syncWeekToCalendar() }
+                    }
+            }
+            .padding(.vertical, 8)
+
+            Divider().background(AppColor.border1)
+
+            // Quick presets
+            VStack(spacing: 6) {
+                Button {
+                    state.programStartDate = AppState.defaultProgramStartDate()
+                    state.syncWeekToCalendar()
+                } label: {
+                    Text("ALIGN TO CURRENT SEASON")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(1.2)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(state.season.color)
+                        .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    state.programStartDate = Calendar.current.startOfDay(for: Date())
+                    state.syncWeekToCalendar()
+                } label: {
+                    Text("RESET TO WEEK 1 TODAY")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(1.2)
+                        .foregroundColor(AppColor.textMuted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(AppColor.cardBackground2)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AppColor.border2, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 8)
+        }
     }
 
     // MARK: - Profile Section

@@ -382,6 +382,65 @@ final class AppState {
         didSet { save() }
     }
 
+    // MARK: - Calendar Anchoring (Wave 5)
+
+    /// The date corresponding to "Day 1 / Week 1, Monday" of the 52-week program.
+    /// Defaults to the start of the most recent astronomical Spring (March 20)
+    /// so a fresh install in May lands in mid-spring (~Week 9) rather than Week 1.
+    var programStartDate: Date = AppState.defaultProgramStartDate() {
+        didSet { save() }
+    }
+
+    /// When true, opening the app (or scenePhase becoming active) recomputes
+    /// currentWeek and currentDayIndex from elapsed days since programStartDate.
+    /// When false, the user controls week manually via the +/- buttons.
+    var autoSyncWeekToCalendar: Bool = true {
+        didSet { save() }
+    }
+
+    /// Whole calendar days elapsed since programStartDate (Day 0 = start day).
+    /// Used for the "Day N" counter on Today and for week computation.
+    var dayNumber: Int {
+        let cal = Calendar.current
+        let start = cal.startOfDay(for: programStartDate)
+        let today = cal.startOfDay(for: Date())
+        return max(0, cal.dateComponents([.day], from: start, to: today).day ?? 0)
+    }
+
+    /// Computed week (1...52) based on dayNumber. Clamps so users past 52 weeks
+    /// land on Week 52 rather than rolling into invalid week numbers.
+    var calendarComputedWeek: Int {
+        min(52, max(1, (dayNumber / 7) + 1))
+    }
+
+    /// Today's day-of-week index (Mon=0 … Sun=6) from the real calendar.
+    var calendarComputedDayIndex: Int {
+        let wd = Calendar.current.component(.weekday, from: Date())
+        return wd == 1 ? 6 : wd - 2
+    }
+
+    /// Re-aligns currentWeek and currentDayIndex to the real calendar.
+    /// Called on app load + scenePhase active. No-op when autoSyncWeekToCalendar is false.
+    func syncWeekToCalendar() {
+        guard autoSyncWeekToCalendar else { return }
+        let newWeek = calendarComputedWeek
+        let newDay = calendarComputedDayIndex
+        if currentWeek != newWeek { currentWeek = newWeek }
+        if currentDayIndex != newDay { currentDayIndex = newDay }
+    }
+
+    /// Default program start: most recent astronomical Spring (March 20).
+    /// Picks the previous-year date if today is before March 20.
+    /// Nonisolated so the v3 Codable decoder (non-actor context) can call it.
+    nonisolated static func defaultProgramStartDate(reference: Date = Date()) -> Date {
+        let cal = Calendar.current
+        let year = cal.component(.year, from: reference)
+        let thisSpring = cal.date(from: DateComponents(year: year, month: 3, day: 20))
+            ?? reference
+        if reference >= thisSpring { return thisSpring }
+        return cal.date(from: DateComponents(year: year - 1, month: 3, day: 20)) ?? reference
+    }
+
     // MARK: - Computed Helpers (v3)
 
     var latestSnapshot: HealthSnapshot? { healthSnapshots.last }
@@ -648,7 +707,9 @@ final class AppState {
             workoutTimeMinute:           workoutTimeMinute,
             workoutDaysMask:             workoutDaysMask,
             supplementRemindersEnabled:  supplementRemindersEnabled,
-            weeklySummaryEnabled:        weeklySummaryEnabled
+            weeklySummaryEnabled:        weeklySummaryEnabled,
+            programStartDate:            programStartDate,
+            autoSyncWeekToCalendar:      autoSyncWeekToCalendar
         )
         if let data = try? JSONEncoder().encode(container) {
             UserDefaults.standard.set(data, forKey: Self.v3Key)
@@ -660,12 +721,14 @@ final class AppState {
         if let data = UserDefaults.standard.data(forKey: Self.v3Key),
            let c = try? JSONDecoder().decode(PersistenceContainerV3.self, from: data) {
             applyV3Container(c)
+            syncWeekToCalendar()
             return
         }
         // 2. Try v2 — copy shared fields, new fields default
         if let data = UserDefaults.standard.data(forKey: Self.v2Key),
            let c = try? JSONDecoder().decode(PersistenceContainer.self, from: data) {
             applyV2Container(c)
+            syncWeekToCalendar()
             return
         }
         // 3. Legacy v1 — copy original fields only
@@ -678,7 +741,12 @@ final class AppState {
             workoutLogs     = legacy.workoutLogs
             prLog           = legacy.prLog
             scheduleWeek    = legacy.currentWeek
+            syncWeekToCalendar()
+            return
         }
+        // 4. No persisted state — fresh install. programStartDate has its initialized
+        // default (most recent Spring), so syncWeekToCalendar lands us in the right week.
+        syncWeekToCalendar()
     }
 
     private func applyV3Container(_ c: PersistenceContainerV3) {
@@ -713,6 +781,9 @@ final class AppState {
         workoutDaysMask            = c.workoutDaysMask
         supplementRemindersEnabled = c.supplementRemindersEnabled
         weeklySummaryEnabled       = c.weeklySummaryEnabled
+        // Wave 5: calendar anchoring
+        programStartDate           = c.programStartDate
+        autoSyncWeekToCalendar     = c.autoSyncWeekToCalendar
     }
 
     private func applyV2Container(_ c: PersistenceContainer) {
@@ -905,6 +976,10 @@ private struct PersistenceContainerV3: Codable {
     var supplementRemindersEnabled: Bool
     var weeklySummaryEnabled: Bool
 
+    // --- Wave 5 additions: calendar anchoring ---
+    var programStartDate: Date
+    var autoSyncWeekToCalendar: Bool
+
     // Custom decode with decodeIfPresent for every v3+ field so that a v2/v3 blob
     // decoded here still produces valid defaults rather than a throw.
     init(from decoder: Decoder) throws {
@@ -944,6 +1019,11 @@ private struct PersistenceContainerV3: Codable {
         workoutDaysMask            = (try? c.decodeIfPresent(Int.self,  forKey: .workoutDaysMask))            ?? 0b1111111
         supplementRemindersEnabled = (try? c.decodeIfPresent(Bool.self, forKey: .supplementRemindersEnabled)) ?? false
         weeklySummaryEnabled       = (try? c.decodeIfPresent(Bool.self, forKey: .weeklySummaryEnabled))       ?? true
+
+        // Wave 5: calendar anchoring — default to most recent astronomical Spring
+        // when decoding a pre-Wave-5 blob so existing users land in the right week.
+        programStartDate       = (try? c.decodeIfPresent(Date.self, forKey: .programStartDate)) ?? AppState.defaultProgramStartDate()
+        autoSyncWeekToCalendar = (try? c.decodeIfPresent(Bool.self, forKey: .autoSyncWeekToCalendar)) ?? true
     }
 
     // Memberwise init used by AppState.save()
@@ -964,7 +1044,10 @@ private struct PersistenceContainerV3: Codable {
         workoutTimeMinute: Int,
         workoutDaysMask: Int,
         supplementRemindersEnabled: Bool,
-        weeklySummaryEnabled: Bool
+        weeklySummaryEnabled: Bool,
+        // Wave 5: calendar anchoring
+        programStartDate: Date,
+        autoSyncWeekToCalendar: Bool
     ) {
         self.currentWeek               = currentWeek
         self.currentDayIndex           = currentDayIndex
@@ -995,6 +1078,8 @@ private struct PersistenceContainerV3: Codable {
         self.workoutDaysMask             = workoutDaysMask
         self.supplementRemindersEnabled  = supplementRemindersEnabled
         self.weeklySummaryEnabled        = weeklySummaryEnabled
+        self.programStartDate            = programStartDate
+        self.autoSyncWeekToCalendar      = autoSyncWeekToCalendar
     }
 }
 

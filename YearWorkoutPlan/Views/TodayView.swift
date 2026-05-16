@@ -46,14 +46,13 @@ struct TodayView: View {
                            newName: newName)
             }
         }
-        .sheet(isPresented: $showMissedDay) {
-            MissedDayDialog(onDismiss: {
-                showMissedDay = false
-                // Check if the user chose "Combine with Next"
-                let key = "missedDayCombined.\(AppState.sharedDateString(from: Date()))"
-                showCombinedBanner = UserDefaults.standard.bool(forKey: key)
-            })
-            .environment(state)
+        .sheet(isPresented: $showMissedDay, onDismiss: {
+            // Picks up the "Combine with Next" flag whether dismissed by button or swipe.
+            let key = "missedDayCombined.\(AppState.sharedDateString(from: Date()))"
+            showCombinedBanner = UserDefaults.standard.bool(forKey: key)
+        }) {
+            MissedDayDialog(isPresented: $showMissedDay)
+                .environment(state)
         }
         .onAppear {
             // Trigger missed-day dialog once per calendar day
@@ -119,7 +118,17 @@ struct TodayView: View {
                     }
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
+                VStack(alignment: .trailing, spacing: 6) {
+                    // Day counter — total days since programStartDate
+                    HStack(spacing: 4) {
+                        Text("DAY")
+                            .font(.monoTiny)
+                            .foregroundColor(AppColor.textFaint)
+                            .tracking(1.5)
+                        Text("\(state.dayNumber + 1)")
+                            .font(.monoBig)
+                            .foregroundColor(state.season.color)
+                    }
                     SectionLabel(text: "Season Goal")
                     Text(state.season.goal)
                         .font(.appSmall)

@@ -25,6 +25,9 @@ struct YearWorkoutPlanApp: App {
                 // the recovery banner reflects fresh HRV/sleep data after a night's sleep.
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
+                        // Re-anchor the week to the calendar (rolls over at midnight)
+                        // and pull fresh HRV/sleep for the recovery banner.
+                        appState.syncWeekToCalendar()
                         Task { await appState.refreshHealthData() }
                     }
                 }
