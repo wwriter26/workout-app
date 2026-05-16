@@ -32,6 +32,14 @@
 		AA000000000000001A /* PerformanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000001A /* PerformanceModels.swift */; };
 		AA000000000000002A /* Autoregulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000002A /* Autoregulation.swift */; };
 		AA000000000000003A /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000003A /* HealthKitManager.swift */; };
+		AA000000000000004A /* RestTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000004B /* RestTimer.swift */; };
+		AA000000000000005A /* RestTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000005A /* RestTimerView.swift */; };
+		AA000000000000006A /* PlateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000006A /* PlateCalculator.swift */; };
+		AA000000000000007A /* SetLogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000007A /* SetLogRow.swift */; };
+		AA000000000000008A /* RecoveryBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000008A /* RecoveryBanner.swift */; };
+		AA000000000000009A /* MoodSliderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000009A /* MoodSliderCard.swift */; };
+		AA00000000000000AA /* SupplementAdherenceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000AA /* SupplementAdherenceCard.swift */; };
+		AA00000000000000BA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000BA /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +69,14 @@
 		BB000000000000002A /* Autoregulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Autoregulation.swift; sourceTree = "<group>"; };
 		BB000000000000003A /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		BB000000000000004A /* YearWorkoutPlan.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YearWorkoutPlan.entitlements; sourceTree = "<group>"; };
+		BB000000000000004B /* RestTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimer.swift; sourceTree = "<group>"; };
+		BB000000000000005A /* RestTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerView.swift; sourceTree = "<group>"; };
+		BB000000000000006A /* PlateCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateCalculator.swift; sourceTree = "<group>"; };
+		BB000000000000007A /* SetLogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetLogRow.swift; sourceTree = "<group>"; };
+		BB000000000000008A /* RecoveryBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryBanner.swift; sourceTree = "<group>"; };
+		BB000000000000009A /* MoodSliderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodSliderCard.swift; sourceTree = "<group>"; };
+		BB00000000000000AA /* SupplementAdherenceCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupplementAdherenceCard.swift; sourceTree = "<group>"; };
+		BB00000000000000BA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C001000000000001 /* YearWorkoutPlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YearWorkoutPlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -112,6 +128,7 @@
 			isa = PBXGroup;
 			children = (
 				BB000000000000003A /* HealthKitManager.swift */,
+				BB000000000000004B /* RestTimer.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -127,6 +144,9 @@
 				B001000000000033 /* SwapExerciseSheet.swift */,
 				B001000000000034 /* RecipeListView.swift */,
 				B001000000000035 /* MobilitySectionView.swift */,
+				BB000000000000009A /* MoodSliderCard.swift */,
+				BB00000000000000AA /* SupplementAdherenceCard.swift */,
+				BB00000000000000BA /* SettingsView.swift */,
 				E001000000000005 /* Components */,
 			);
 			path = Views;
@@ -144,6 +164,10 @@
 			isa = PBXGroup;
 			children = (
 				B001000000000015 /* CardView.swift */,
+				BB000000000000005A /* RestTimerView.swift */,
+				BB000000000000006A /* PlateCalculator.swift */,
+				BB000000000000007A /* SetLogRow.swift */,
+				BB000000000000008A /* RecoveryBanner.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -257,6 +281,14 @@
 				AA000000000000001A /* PerformanceModels.swift in Sources */,
 				AA000000000000002A /* Autoregulation.swift in Sources */,
 				AA000000000000003A /* HealthKitManager.swift in Sources */,
+				AA000000000000004A /* RestTimer.swift in Sources */,
+				AA000000000000005A /* RestTimerView.swift in Sources */,
+				AA000000000000006A /* PlateCalculator.swift in Sources */,
+				AA000000000000007A /* SetLogRow.swift in Sources */,
+				AA000000000000008A /* RecoveryBanner.swift in Sources */,
+				AA000000000000009A /* MoodSliderCard.swift in Sources */,
+				AA00000000000000AA /* SupplementAdherenceCard.swift in Sources */,
+				AA00000000000000BA /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

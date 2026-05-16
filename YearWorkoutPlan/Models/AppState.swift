@@ -618,6 +618,72 @@ final class AppState {
         return f.string(from: date)
     }
 
+    // MARK: - Wave 2A Helpers
+
+    /// Returns the most recent SetLog for the given exercise name across all workoutLogs.
+    /// Used by SetLogRow to populate "Prev: W×R" in the logging UI.
+    func prevSetForExercise(_ name: String) -> SetLog? {
+        // workoutLogs is stored oldest-first; iterate reversed for most-recent first
+        for log in workoutLogs.reversed() {
+            if let ex = log.exercises.first(where: { $0.name == name }),
+               let lastSet = ex.sets.last {
+                return lastSet
+            }
+        }
+        return nil
+    }
+
+    /// Suggests next-session weight based on last session's avgRIR vs target.
+    /// Returns nil when autoregEnabled is false, or when there's no prior log data.
+    func suggestedNextWeight(forExercise name: String, targetRIRString: String) -> Double? {
+        guard autoregEnabled else { return nil }
+        guard let targetRIR = Autoregulation.parseTargetRIR(targetRIRString) else { return nil }
+
+        // Find the most recent workout log containing this exercise
+        for log in workoutLogs.reversed() {
+            if let ex = log.exercises.first(where: { $0.name == name }) {
+                guard let avgRIR = ex.avgRIR,
+                      let lastWeight = ex.sets.compactMap({ Double($0.weight) }).last,
+                      lastWeight > 0 else { continue }
+                return Autoregulation.nextWeight(
+                    lastWeight: lastWeight,
+                    avgRIR: avgRIR,
+                    targetRIR: targetRIR
+                )
+            }
+        }
+        return nil
+    }
+
+    /// Weekly supplement compliance for tier 1–2 supplements.
+    /// Returns a value in [0, 1]: 1.0 = all supplements taken every day this week.
+    var weeklySupplementCompliance: Double {
+        let tier12 = SupplementList.all.filter { $0.tier <= 2 }
+        guard !tier12.isEmpty else { return 0 }
+
+        // Build the set of dates for the current calendar week (Mon–today)
+        let calendar = Calendar.current
+        guard let weekStart = calendar.date(
+            from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())
+        ) else { return 0 }
+
+        var dates: [String] = []
+        var d = weekStart
+        let today = calendar.startOfDay(for: Date())
+        while d <= today {
+            dates.append(Self.sharedDateString(from: d))
+            d = calendar.date(byAdding: .day, value: 1, to: d) ?? d.addingTimeInterval(86_400)
+        }
+
+        guard !dates.isEmpty else { return 0 }
+        let total = Double(tier12.count * dates.count)
+        let taken = supplementAdherence.filter { entry in
+            entry.taken && dates.contains(entry.date) &&
+            tier12.contains(where: { $0.id == entry.supplementId })
+        }.count
+        return Double(taken) / total
+    }
+
     // MARK: - Hexagon Math
 
     /// Linear interpolation between a sorted set of (x, y) anchor points.

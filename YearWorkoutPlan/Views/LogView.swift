@@ -18,6 +18,12 @@ struct LogView: View {
     @State private var exportStart = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var exportEnd = Date()
 
+    // Post-save RPE flow
+    @State private var showRPESheet = false
+    @State private var sessionStartDate: Date = Date()  // captured when logging starts
+    @State private var rpeValue: Double = 7
+    @State private var durationMin: Double = 60
+
     private var filteredLogs: [WorkoutLog] {
         let all = state.workoutLogs.reversed() as [WorkoutLog]
         switch filter {
@@ -75,6 +81,7 @@ struct LogView: View {
                 HStack(spacing: 8) {
                     PrimaryButton(title: "+ LOG TODAY", color: state.season.color) {
                         state.logWeights = [:]
+                        sessionStartDate = Date()
                         state.isLoggingSession = true
                     }
                     OutlineButton(title: "EXPORT") {
@@ -136,6 +143,33 @@ struct LogView: View {
             .padding(.bottom, 20)
         }
         .scrollDismissesKeyboard(.interactively)
+        .sheet(isPresented: $showRPESheet) {
+            SessionRPESheet(
+                sessionLabel: state.todaySession.label,
+                seasonColor: state.season.color,
+                rpe: $rpeValue,
+                durationMin: $durationMin
+            ) {
+                // Save RPE to state
+                state.logSessionRPE(
+                    rpe: Int(rpeValue),
+                    durationMin: Int(durationMin)
+                )
+                // Push workout to HealthKit (fire-and-forget — failure is non-fatal)
+                let isCardio = state.adjustedSession.isCardio
+                let endDate = Date()
+                Task {
+                    try? await HealthKitManager.shared.saveWorkout(
+                        start: sessionStartDate,
+                        end: endDate,
+                        isCardio: isCardio,
+                        activeEnergyKcal: nil,
+                        avgHeartRate: nil
+                    )
+                }
+                showRPESheet = false
+            }
+        }
         .sheet(isPresented: $showShareSheet) {
             if let data = exportData {
                 ShareSheet(items: [data])
@@ -193,7 +227,7 @@ struct LogView: View {
         }
     }
 
-    // MARK: - Session Log Form
+    // MARK: - Session Log Form (uses shared SetLogRow)
     private var sessionLogForm: some View {
         @Bindable var bindState = state
         let session = state.todaySession
@@ -217,62 +251,39 @@ struct LogView: View {
 
             ForEach(Array(session.exercises.enumerated()), id: \.offset) { i, ex in
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(ex.name)
-                        .font(.appSubhead)
-                        .foregroundColor(AppColor.textSecondary)
-                    Text("\(ex.sets) × \(ex.reps) · RIR \(ex.rir)")
-                        .font(.appBody)
-                        .foregroundColor(AppColor.textDimmed)
-
-                    ForEach(0..<ex.sets, id: \.self) { si in
-                        HStack(spacing: 6) {
-                            Text("S\(si + 1)")
-                                .font(.monoSmall)
-                                .foregroundColor(AppColor.textFaint)
-                                .frame(width: 24)
-
-                            TextField("Weight lbs", text: Binding(
-                                get: { bindState.logWeights["\(i)-\(si)-w"] ?? "" },
-                                set: { bindState.logWeights["\(i)-\(si)-w"] = $0 }
-                            ))
-                            .keyboardType(.decimalPad)
-                            .font(.monoSmall)
-                            .foregroundColor(AppColor.textPrimary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 7)
-                            .background(AppColor.cardBackground2)
-                            .cornerRadius(6)
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppColor.border2, lineWidth: 1))
-
-                            TextField("Reps", text: Binding(
-                                get: { bindState.logWeights["\(i)-\(si)-r"] ?? "" },
-                                set: { bindState.logWeights["\(i)-\(si)-r"] = $0 }
-                            ))
-                            .keyboardType(.numberPad)
-                            .font(.monoSmall)
-                            .foregroundColor(AppColor.textPrimary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 7)
-                            .background(AppColor.cardBackground2)
-                            .cornerRadius(6)
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppColor.border2, lineWidth: 1))
-                            .frame(width: 52)
-
-                            TextField("RIR", text: Binding(
-                                get: { bindState.logWeights["\(i)-\(si)-rir"] ?? "" },
-                                set: { bindState.logWeights["\(i)-\(si)-rir"] = $0 }
-                            ))
-                            .keyboardType(.numberPad)
-                            .font(.monoSmall)
-                            .foregroundColor(AppColor.textPrimary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 7)
-                            .background(AppColor.cardBackground2)
-                            .cornerRadius(6)
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppColor.border2, lineWidth: 1))
-                            .frame(width: 44)
-                        }
+                    // Exercise header
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(ex.name)
+                            .font(.appSubhead)
+                            .foregroundColor(AppColor.textSecondary)
+                        Text("\(ex.sets) × \(ex.reps) · RIR \(ex.rir)")
+                            .font(.appBody)
+                            .foregroundColor(AppColor.textDimmed)
                     }
+
+                    // One SetLogRow per set using the shared component
+                    ForEach(0..<ex.sets, id: \.self) { si in
+                        SetLogRow(
+                            exIndex: i,
+                            setIndex: si,
+                            exercise: ex,
+                            seasonColor: state.season.color,
+                            prevSetForThisExercise: state.prevSetForExercise(ex.name),
+                            completedSets: $bindState.completedSets,
+                            logWeights: $bindState.logWeights,
+                            userPlateProfile: state.userProfile.plateProfile,
+                            onComplete: {}
+                        )
+                    }
+
+                    // Autoreg hint below last set
+                    AutoregHint(
+                        suggestedWeight: state.suggestedNextWeight(
+                            forExercise: ex.name,
+                            targetRIRString: ex.rir
+                        ),
+                        seasonColor: state.season.color
+                    )
                 }
                 .padding(.vertical, 8)
                 if i < session.exercises.count - 1 {
@@ -280,8 +291,10 @@ struct LogView: View {
                 }
             }
 
+            // Save triggers the RPE sheet post-save
             PrimaryButton(title: "SAVE SESSION ✓", color: state.season.color) {
                 state.saveSession()
+                showRPESheet = true
             }
             .padding(.top, 8)
         }
@@ -382,6 +395,99 @@ struct LogView: View {
                 }
             }
             return lines.joined(separator: "\n").data(using: .utf8)
+        }
+    }
+}
+
+// MARK: - Session RPE Sheet
+/// Post-save sheet that collects session RPE (0–10) and duration in minutes.
+/// Presented automatically after the user taps "SAVE SESSION ✓" in sessionLogForm.
+struct SessionRPESheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let sessionLabel: String
+    let seasonColor: Color
+    @Binding var rpe: Double
+    @Binding var durationMin: Double
+    let onSave: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                AppColor.appBackground.ignoresSafeArea()
+                VStack(spacing: 20) {
+                    CardView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            SectionLabel(text: "How was \(sessionLabel)?")
+
+                            // RPE slider
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text("Session RPE")
+                                        .font(.appBody)
+                                        .foregroundColor(AppColor.textSecondary)
+                                    Spacer()
+                                    Text("\(Int(rpe))/10")
+                                        .font(.system(size: 18, weight: .bold, design: .monospaced))
+                                        .foregroundColor(rpeColor)
+                                }
+                                Slider(value: $rpe, in: 0...10, step: 1)
+                                    .tint(rpeColor)
+                                HStack {
+                                    Text("Easy")
+                                        .font(.monoTiny)
+                                        .foregroundColor(AppColor.textFaint)
+                                    Spacer()
+                                    Text("Max effort")
+                                        .font(.monoTiny)
+                                        .foregroundColor(AppColor.textFaint)
+                                }
+                            }
+
+                            Divider().background(AppColor.border1)
+
+                            // Duration stepper
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text("Duration")
+                                        .font(.appBody)
+                                        .foregroundColor(AppColor.textSecondary)
+                                    Spacer()
+                                    Text("\(Int(durationMin)) min")
+                                        .font(.system(size: 18, weight: .bold, design: .monospaced))
+                                        .foregroundColor(AppColor.textPrimary)
+                                }
+                                Slider(value: $durationMin, in: 15...180, step: 5)
+                                    .tint(seasonColor)
+                            }
+                        }
+                    }
+
+                    PrimaryButton(title: "SAVE & DONE", color: seasonColor) {
+                        onSave()
+                    }
+
+                    Spacer()
+                }
+                .padding(20)
+            }
+            .navigationTitle("Session Complete")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") { dismiss() }
+                        .foregroundColor(AppColor.textFaint)
+                }
+            }
+            .preferredColorScheme(.dark)
+        }
+    }
+
+    private var rpeColor: Color {
+        switch Int(rpe) {
+        case 0...4: return AppColor.spring
+        case 5...7: return AppColor.summer
+        default:    return AppColor.fall
         }
     }
 }

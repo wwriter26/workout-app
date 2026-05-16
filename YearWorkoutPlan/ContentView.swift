@@ -2,8 +2,11 @@ import SwiftUI
 
 // MARK: - Content View
 // Root container: sticky header + scrollable body + custom tab bar.
+// The AppState is now injected from YearWorkoutPlanApp so the singleton lives at
+// the app level (not recreated on ContentView re-init).
 struct ContentView: View {
-    @State private var appState = AppState()
+    @Environment(AppState.self) private var appState
+    @State private var showSettings = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -34,14 +37,18 @@ struct ContentView: View {
             // Custom bottom tab bar overlaid at the bottom
             bottomTabBar
         }
-        .environment(appState)
-        .onAppear { appState.load() }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+                .environment(appState)
+        }
     }
 
     // MARK: - Top Bar
+
     private var topBar: some View {
         HStack {
+            // Logo
             HStack(alignment: .lastTextBaseline, spacing: 6) {
                 HStack(spacing: 0) {
                     Text("W-")
@@ -58,15 +65,31 @@ struct ContentView: View {
                     .foregroundColor(AppColor.textFaint)
                     .tracking(1.5)
             }
+
             Spacer()
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(appState.season.color)
-                    .frame(width: 8, height: 8)
-                Text(appState.season.name.uppercased())
-                    .font(.monoLabel)
-                    .foregroundColor(appState.season.color)
-                    .tracking(1)
+
+            HStack(spacing: 12) {
+                // Settings gear icon — added in Wave 2A
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundColor(AppColor.textFaint)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Settings")
+
+                // Season pill
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(appState.season.color)
+                        .frame(width: 8, height: 8)
+                    Text(appState.season.name.uppercased())
+                        .font(.monoLabel)
+                        .foregroundColor(appState.season.color)
+                        .tracking(1)
+                }
             }
         }
         .padding(.horizontal, 16)
@@ -80,6 +103,7 @@ struct ContentView: View {
     }
 
     // MARK: - Bottom Tab Bar
+
     private var bottomTabBar: some View {
         VStack(spacing: 0) {
             Rectangle()
@@ -117,4 +141,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environment(AppState())
 }

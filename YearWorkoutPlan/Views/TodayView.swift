@@ -3,36 +3,43 @@ import SwiftUI
 // MARK: - Today View
 struct TodayView: View {
     @Environment(AppState.self) private var state
-    /// Tracks which exercise index is awaiting a swap selection.
     @State private var swapTarget: SwapTarget? = nil
 
     var body: some View {
         @Bindable var bindState = state
-        ScrollView {
-            VStack(spacing: 10) {
-                headerCard
-                bodyweightCard
-                whoopCard
-                sessionCard
-                weekAdjusterCard
-                Spacer().frame(height: 20)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(spacing: 10) {
+                    RecoveryBanner()
+                    headerCard
+                    SupplementAdherenceCard()
+                    MoodSliderCard()
+                    bodyweightCard
+                    sessionCard
+                    weekAdjusterCard
+                    mobilityCard
+                    Spacer().frame(height: 80)  // space for rest timer overlay
+                }
+                .padding(.horizontal, 14)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 12)
-            .padding(.bottom, 20)
-        }
-        .scrollDismissesKeyboard(.interactively)
-        // Present the swap sheet when swapTarget is set.
-        .sheet(item: $swapTarget) { target in
-            SwapExerciseSheet(
-                target: target,
-                seasonColor: state.season.color
-            ) { originalName, newName in
-                state.swap(week: state.currentWeek,
-                           day: state.todayDayKey,
-                           originalName: originalName,
-                           newName: newName)
+            .scrollDismissesKeyboard(.interactively)
+            .sheet(item: $swapTarget) { target in
+                SwapExerciseSheet(
+                    target: target,
+                    seasonColor: state.season.color
+                ) { originalName, newName in
+                    state.swap(week: state.currentWeek,
+                               day: state.todayDayKey,
+                               originalName: originalName,
+                               newName: newName)
+                }
             }
+
+            // Rest timer overlay — floats above scroll content, below tab bar
+            RestTimerView(seasonColor: state.season.color)
+                .padding(.bottom, 8)
         }
     }
 
@@ -55,6 +62,11 @@ struct TodayView: View {
                                       foreground: AppColor.deload,
                                       background: AppColor.deloadBg)
                         }
+                        if state.travelModeUntil != nil && state.travelModeUntil! > Date() {
+                            BadgeView("TRAVEL MODE",
+                                      foreground: AppColor.summer,
+                                      background: AppColor.summer.opacity(0.13))
+                        }
                     }
                 }
                 Spacer()
@@ -68,7 +80,6 @@ struct TodayView: View {
                 }
             }
         }
-        // Season-colour left accent border
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(state.season.color)
@@ -117,44 +128,7 @@ struct TodayView: View {
         }
     }
 
-    // MARK: - Whoop Card
-    private var whoopCard: some View {
-        CardView {
-            SectionLabel(text: "Whoop Recovery")
-            HStack(spacing: 8) {
-                ForEach(WhoopStatus.allCases, id: \.self) { status in
-                    let isSelected = state.whoopToday == status
-                    Button {
-                        state.whoopToday = isSelected ? nil : status
-                    } label: {
-                        Text(status.label)
-                            .font(.system(size: 13, weight: .bold, design: .default))
-                            .foregroundColor(isSelected ? status.color : AppColor.textDimmed)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(isSelected ? status.color.opacity(0.13) : AppColor.cardBackground2)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(isSelected ? status.color : AppColor.border2, lineWidth: 2)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.15), value: isSelected)
-                }
-            }
-            .padding(.top, 8)
-
-            if let w = state.whoopToday {
-                Text(w.description)
-                    .font(.appSmall)
-                    .foregroundColor(w.color)
-                    .padding(.top, 8)
-            }
-        }
-    }
-
-    // MARK: - Session Card
+    // MARK: - Session Card (uses SetLogRow)
     private var sessionCard: some View {
         @Bindable var bindState = state
         let session = state.adjustedSession
@@ -189,25 +163,30 @@ struct TodayView: View {
                     .padding(.top, 4)
             } else {
                 ForEach(Array(exList.enumerated()), id: \.offset) { i, ex in
-                    // Resolve whether this exercise has been swapped today
                     let swapKey = state.swapKey(week: state.currentWeek,
-                                                 day: state.todayDayKey,
-                                                 originalName: ex.name)
+                                                day: state.todayDayKey,
+                                                originalName: ex.name)
                     let displayName = state.swappedExercises[swapKey] ?? ex.name
                     let isSwapped   = state.swappedExercises[swapKey] != nil
+                    let prevSet     = state.prevSetForExercise(displayName)
+                    let suggested   = state.suggestedNextWeight(
+                        forExercise: displayName,
+                        targetRIRString: ex.rir
+                    )
 
-                    ExerciseRowView(
+                    ExerciseBlockView(
                         exercise: ex,
                         displayName: displayName,
                         isSwapped: isSwapped,
                         exIndex: i,
                         seasonColor: state.season.color,
+                        prevSet: prevSet,
+                        suggestedWeight: suggested,
                         completedSets: $bindState.completedSets,
                         logWeights: $bindState.logWeights,
-                        onToggle: { si in state.toggleSet(exIndex: i, setIndex: si) },
+                        userPlateProfile: state.userProfile.plateProfile,
                         onSwap: {
-                            swapTarget = SwapTarget(originalName: ex.name,
-                                                    exIndex: i)
+                            swapTarget = SwapTarget(originalName: ex.name, exIndex: i)
                         },
                         onRevert: {
                             state.revertSwap(week: state.currentWeek,
@@ -215,6 +194,7 @@ struct TodayView: View {
                                              originalName: ex.name)
                         }
                     )
+
                     if i < exList.count - 1 {
                         Divider().background(AppColor.border1).padding(.vertical, 4)
                     }
@@ -246,7 +226,6 @@ struct TodayView: View {
             }
             .padding(.top, 8)
 
-            // Day selector row
             HStack(spacing: 4) {
                 ForEach(Array(Schedules.days.enumerated()), id: \.offset) { i, day in
                     let isSelected = i == state.currentDayIndex
@@ -271,40 +250,66 @@ struct TodayView: View {
             .padding(.top, 8)
         }
     }
+
+    // MARK: - Mobility Card
+    private var mobilityCard: some View {
+        CardView {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    SectionLabel(text: "Mobility")
+                    Text("Did mobility today?")
+                        .font(.appBody)
+                        .foregroundColor(AppColor.textSecondary)
+                }
+                Spacer()
+                Button {
+                    state.toggleMobility(for: Date())
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: state.isMobilityCompletedToday ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 20))
+                            .foregroundColor(state.isMobilityCompletedToday ? AppColor.spring : AppColor.textFaint)
+                        Text(state.isMobilityCompletedToday ? "DONE" : "LOG")
+                            .font(.system(size: 11, weight: .heavy, design: .default))
+                            .foregroundColor(state.isMobilityCompletedToday ? AppColor.spring : AppColor.textDimmed)
+                            .tracking(1)
+                    }
+                }
+                .buttonStyle(.plain)
+                .animation(.easeInOut(duration: 0.2), value: state.isMobilityCompletedToday)
+            }
+        }
+    }
 }
 
-// MARK: - Swap Target (sheet item model)
-struct SwapTarget: Identifiable {
-    let id = UUID()
-    let originalName: String
-    let exIndex: Int
-}
-
-// MARK: - Exercise Row
-private struct ExerciseRowView: View {
+// MARK: - Exercise Block View
+/// Wraps exercise header (name, swap controls, RIR/rest info) + SetLogRow per set
+/// + optional AutoregHint below the last set.
+private struct ExerciseBlockView: View {
     let exercise: Exercise
     let displayName: String
     let isSwapped: Bool
     let exIndex: Int
     let seasonColor: Color
+    let prevSet: SetLog?
+    let suggestedWeight: Double?
     @Binding var completedSets: [String: Bool]
     @Binding var logWeights: [String: String]
-    let onToggle: (Int) -> Void
+    let userPlateProfile: PlateProfile
     let onSwap: () -> Void
     let onRevert: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            // Exercise name row
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
-                    // Exercise name + swap controls
                     HStack(spacing: 6) {
                         Text(displayName)
                             .font(.appSubhead)
                             .foregroundColor(AppColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        // Swap button — circular icon
                         Button(action: onSwap) {
                             Image(systemName: "arrow.triangle.2.circlepath")
                                 .font(.system(size: 11, weight: .semibold))
@@ -317,7 +322,6 @@ private struct ExerciseRowView: View {
                         .accessibilityLabel("Swap \(exercise.name)")
                     }
 
-                    // Swapped badge + revert button
                     if isSwapped {
                         HStack(spacing: 6) {
                             BadgeView("SWAPPED",
@@ -352,49 +356,31 @@ private struct ExerciseRowView: View {
                 .font(.appBody)
                 .foregroundColor(AppColor.textDimmed)
 
-            // Set toggles
-            HStack(spacing: 6) {
-                ForEach(0..<exercise.sets, id: \.self) { si in
-                    let key = "\(exIndex)-\(si)"
-                    SetToggle(
-                        index: si,
-                        isDone: completedSets[key] ?? false,
-                        color: seasonColor,
-                        onTap: { onToggle(si) }
-                    )
-                }
+            // One SetLogRow per set
+            ForEach(0..<exercise.sets, id: \.self) { si in
+                SetLogRow(
+                    exIndex: exIndex,
+                    setIndex: si,
+                    exercise: exercise,
+                    seasonColor: seasonColor,
+                    prevSetForThisExercise: prevSet,
+                    completedSets: $completedSets,
+                    logWeights: $logWeights,
+                    userPlateProfile: userPlateProfile,
+                    onComplete: {}  // completion side-effects handled inside SetLogRow
+                )
             }
 
-            // Weight / RIR quick log
-            HStack(spacing: 6) {
-                TextField("Weight (lbs)", text: Binding(
-                    get: { logWeights["\(exIndex)-0-w"] ?? "" },
-                    set: { logWeights["\(exIndex)-0-w"] = $0 }
-                ))
-                .keyboardType(.decimalPad)
-                .font(.monoSmall)
-                .foregroundColor(AppColor.textPrimary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(AppColor.cardBackground2)
-                .cornerRadius(6)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppColor.border2, lineWidth: 1))
-
-                TextField("RIR", text: Binding(
-                    get: { logWeights["\(exIndex)-0-rir"] ?? "" },
-                    set: { logWeights["\(exIndex)-0-rir"] = $0 }
-                ))
-                .keyboardType(.numberPad)
-                .font(.monoSmall)
-                .foregroundColor(AppColor.textPrimary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(AppColor.cardBackground2)
-                .cornerRadius(6)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppColor.border2, lineWidth: 1))
-                .frame(width: 52)
-            }
+            // Autoreg hint below the last set
+            AutoregHint(suggestedWeight: suggestedWeight, seasonColor: seasonColor)
         }
         .padding(.vertical, 6)
     }
+}
+
+// MARK: - Swap Target
+struct SwapTarget: Identifiable {
+    let id = UUID()
+    let originalName: String
+    let exIndex: Int
 }
